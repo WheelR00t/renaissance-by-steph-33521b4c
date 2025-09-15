@@ -1,6 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
+const nodemailer = require('nodemailer');
+
+// Configuration du transporteur email
+const transporter = nodemailer.createTransporter({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: false, // true pour 465, false pour autres ports
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // POST /api/emails/confirmation - Envoyer email de confirmation
 router.post('/confirmation', async (req, res) => {
@@ -23,16 +35,34 @@ router.post('/confirmation', async (req, res) => {
       return res.status(404).json({ error: 'Réservation non trouvée' });
     }
 
-    // Simulation d'envoi d'email
-    // Dans une vraie implémentation, vous utiliseriez un service comme :
-    // - Nodemailer
-    // - SendGrid
-    // - AWS SES
-    
+    // Envoi de l'email de confirmation
+    const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #6366f1;">Confirmation de votre réservation</h2>
+      <p>Bonjour ${booking.first_name} ${booking.last_name},</p>
+      <p>Votre réservation a été confirmée avec succès !</p>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0;">Détails de votre réservation :</h3>
+        <p><strong>Service :</strong> ${booking.service_name}</p>
+        <p><strong>Date :</strong> ${booking.date}</p>
+        <p><strong>Heure :</strong> ${booking.time}</p>
+        <p><strong>Durée :</strong> ${booking.service_duration}</p>
+        <p><strong>Prix :</strong> ${booking.price}€</p>
+      </div>
+      
+      <p>Nous vous contacterons prochainement pour finaliser les détails.</p>
+      <p>À bientôt,<br>Renaissance by Steph</p>
+    </div>`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: booking.email,
+      subject: `Confirmation de réservation - ${booking.service_name}`,
+      html: emailHtml
+    });
+
     console.log(`📧 Email de confirmation envoyé à ${booking.email}`);
-    console.log(`Service: ${booking.service_name}`);
-    console.log(`Date: ${booking.date} à ${booking.time}`);
-    console.log(`Prix: ${booking.price}€`);
 
     // Marquer l'email comme envoyé (optionnel - ajouter une colonne confirmation_email_sent)
     await db.run(`
