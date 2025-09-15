@@ -59,7 +59,7 @@ router.post('/register', async (req, res) => {
 
   } catch (error) {
     console.error('Erreur création utilisateur:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    res.status(500).json({ error: 'Erreur serveur', details: error?.message });
   }
 });
 

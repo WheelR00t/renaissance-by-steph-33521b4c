@@ -63,6 +63,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Simple ping
+app.get('/api/ping', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
+});
+
 // Servir le frontend statique
 const frontendPath = path.join(__dirname, process.env.FRONTEND_PATH || '../../dist');
 console.log('📁 Frontend path:', frontendPath);
