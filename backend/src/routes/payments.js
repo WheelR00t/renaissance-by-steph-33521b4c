@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // GET /api/payments/list - Liste des paiements (à partir des réservations)
 router.get('/list', async (req, res) => {
@@ -31,7 +32,7 @@ router.get('/list', async (req, res) => {
 });
 
 
-// POST /api/payments/create-intent - Créer une intention de paiement
+// POST /api/payments/create-intent - Créer une intention de paiement Stripe
 router.post('/create-intent', async (req, res) => {
   try {
     const { bookingId, amount } = req.body;
@@ -46,32 +47,41 @@ router.post('/create-intent', async (req, res) => {
       return res.status(404).json({ error: 'Réservation non trouvée' });
     }
 
-    // Générer un client secret (simulation Stripe)
-    const clientSecret = `pi_${uuidv4().replace(/-/g, '')}_secret_${uuidv4().slice(0, 8)}`;
+    // Créer une PaymentIntent avec Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount), // montant en centimes
+      currency: 'eur',
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        bookingId: bookingId,
+        customerEmail: booking.email,
+        customerName: `${booking.first_name} ${booking.last_name}`
+      }
+    });
 
-    // Dans une vraie implémentation Stripe, vous feriez :
-    // const paymentIntent = await stripe.paymentIntents.create({
-    //   amount: amount,
-    //   currency: 'eur',
-    //   metadata: { bookingId: bookingId }
-    // });
+    // Sauvegarder l'ID du PaymentIntent dans la base
+    await db.run(`
+      UPDATE bookings 
+      SET stripe_payment_intent_id = ?
+      WHERE id = ?
+    `, [paymentIntent.id, bookingId]);
 
-    const paymentIntent = {
-      clientSecret: clientSecret,
+    res.json({
+      clientSecret: paymentIntent.client_secret,
       amount: amount,
       currency: 'eur',
       bookingId: bookingId
-    };
-
-    res.json(paymentIntent);
+    });
 
   } catch (error) {
-    console.error('Erreur création payment intent:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('Erreur création PaymentIntent Stripe:', error);
+    res.status(500).json({ error: 'Erreur serveur: ' + error.message });
   }
 });
 
-// POST /api/payments/confirm - Confirmer un paiement
+// POST /api/payments/confirm - Confirmer un paiement Stripe
 router.post('/confirm', async (req, res) => {
   try {
     const { paymentIntentId, bookingId } = req.body;
@@ -80,16 +90,13 @@ router.post('/confirm', async (req, res) => {
       return res.status(400).json({ error: 'paymentIntentId et bookingId requis' });
     }
 
-    // Simuler la confirmation de paiement (100% succès pour les tests)
-    const isPaymentSuccessful = true;
-    
-    // Version aléatoire pour la vraie production
-    // const isPaymentSuccessful = Math.random() > 0.1;
+    // Récupérer le PaymentIntent depuis Stripe pour vérifier le statut
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId.split('_secret_')[0]);
 
-    if (!isPaymentSuccessful) {
+    if (paymentIntent.status !== 'succeeded') {
       return res.status(400).json({ 
         success: false, 
-        error: 'Paiement refusé par la banque' 
+        error: 'Paiement non confirmé par Stripe' 
       });
     }
 
@@ -130,8 +137,8 @@ router.post('/confirm', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur confirmation paiement:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('Erreur confirmation paiement Stripe:', error);
+    res.status(500).json({ error: 'Erreur serveur: ' + error.message });
   }
 });
 

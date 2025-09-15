@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiService, BookingData, PaymentIntent } from "@/lib/api";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import StripePaymentForm from "./StripePaymentForm";
+
+// Charger Stripe avec la clé publique
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_default');
 
 interface PaymentFlowProps {
   booking: BookingData;
@@ -65,42 +71,8 @@ const PaymentFlow = ({
   };
 
   const handlePayment = async () => {
-    if (!paymentIntent || !booking.id) {
-      toast.error('Informations de paiement manquantes');
-      return;
-    }
-
-    setPaymentStatus('processing');
-    setError(null);
-
-    try {
-      // Simulation du processus Stripe (à remplacer par la vraie intégration)
-      await simulateStripePayment(paymentIntent.clientSecret);
-      
-      // Confirmer le paiement côté serveur
-      const result = await apiService.confirmPayment(
-        paymentIntent.clientSecret,
-        booking.id
-      );
-
-      if (result.success) {
-        setPaymentStatus('succeeded');
-        toast.success('Paiement confirmé ! Vous allez recevoir un email de confirmation.');
-        
-        // Déclencher l'envoi de l'email de confirmation
-        await apiService.sendConfirmationEmail(booking.id);
-        
-        onPaymentSuccess(result.booking);
-      } else {
-        throw new Error('Échec de la confirmation du paiement');
-      }
-    } catch (err) {
-      setPaymentStatus('failed');
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du paiement';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      onPaymentError(errorMessage);
-    }
+    // Cette fonction est maintenant gérée par StripePaymentForm
+    console.log('Paiement géré par Stripe Elements');
   };
 
   // Simulation Stripe (remplacez par la vraie intégration)
@@ -211,18 +183,28 @@ const PaymentFlow = ({
             </Alert>
           ) : (
             <>
-              {/* Formulaire de carte (ici simplifié - intégrez Stripe Elements) */}
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                <div className="text-center text-muted-foreground">
-                  <CreditCard className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">
-                    Interface de paiement Stripe à intégrer ici
-                  </p>
-                  <p className="text-xs mt-1">
-                    (Éléments de carte sécurisés Stripe)
-                  </p>
-                </div>
-              </div>
+              {/* Stripe Elements - Interface de paiement réelle */}
+              {paymentIntent && (
+                <Elements 
+                  stripe={stripePromise} 
+                  options={{
+                    clientSecret: paymentIntent.clientSecret,
+                    appearance: {
+                      theme: 'stripe',
+                      variables: {
+                        colorPrimary: '#6366f1'
+                      }
+                    }
+                  }}
+                >
+                  <StripePaymentForm
+                    booking={booking}
+                    clientSecret={paymentIntent.clientSecret}
+                    onPaymentSuccess={onPaymentSuccess}
+                    onPaymentError={onPaymentError}
+                  />
+                </Elements>
+              )}
 
               {error && (
                 <Alert variant="destructive">
@@ -231,26 +213,8 @@ const PaymentFlow = ({
                 </Alert>
               )}
 
-              {/* Actions */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={handlePayment}
-                  disabled={paymentStatus === 'processing'}
-                  className="flex-1"
-                >
-                  {paymentStatus === 'processing' ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Traitement en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4 mr-2" />
-                      Payer {formatPrice(booking.price)}
-                    </>
-                  )}
-                </Button>
-                
+              {/* Bouton d'annulation */}
+              <div className="flex justify-end">
                 <Button 
                   variant="outline" 
                   onClick={onCancel}
