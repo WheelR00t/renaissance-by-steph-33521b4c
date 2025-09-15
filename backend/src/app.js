@@ -76,9 +76,11 @@ app.get('/api/calendar/slots', async (req, res) => {
 
 // Routes API protégées (authentification requise)
 app.use('/api/calendar', authenticateToken, require('./routes/calendar'));
-app.use('/api/bookings', authenticateToken, require('./routes/bookings'));
-app.use('/api/payments', authenticateToken, require('./routes/payments'));
 app.use('/api/emails', authenticateToken, require('./routes/emails'));
+
+// Routes de réservation et paiement (publiques pour les guests)
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Routes API admin (authentification + rôle admin requis)
 app.use('/api/dashboard', authenticateToken, requireAdmin, require('./routes/dashboard'));
