@@ -90,6 +90,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('PUT /api/services/:id - ID:', id);
+    console.log('PUT /api/services/:id - Body:', req.body);
     const { name, description, shortDescription, price, duration, category, isActive, features } = req.body;
 
     const updates = [];
