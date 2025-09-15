@@ -99,4 +99,21 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Debug endpoints (safe: no sensitive data)
+router.get('/ping', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
+});
+
+router.get('/debug-list', async (req, res) => {
+  try {
+    const users = await db.query(
+      'SELECT id, email, first_name, last_name, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT 50'
+    );
+    res.json({ count: users.length, users });
+  } catch (error) {
+    console.error('Erreur debug-list:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
