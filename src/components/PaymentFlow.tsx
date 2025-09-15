@@ -107,9 +107,9 @@ const PaymentFlow = ({
     }).format(price);
   };
 
-  // Vérifie que le clientSecret Stripe est bien au format `${id}_secret_${secret}`
+  // Vérifie que le clientSecret Stripe est bien au format `${id}_secret_${secret}` (ex: pi_12345_secret_abc)
   const isValidClientSecret = (cs?: string) =>
-    typeof cs === 'string' && cs.includes('_secret_');
+    typeof cs === 'string' && /^pi_[A-Za-z0-9]+_secret_[A-Za-z0-9]+$/.test(cs);
 
   if (loading) {
     return (
@@ -222,7 +222,7 @@ const PaymentFlow = ({
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Configuration Stripe invalide côté serveur. Veuillez définir une clé secrète Stripe valide (STRIPE_SECRET_KEY) et redéployer.
+                      Paiement indisponible: serveur API hors ligne ou configuration Stripe invalide. Réessayez plus tard.
                     </AlertDescription>
                   </Alert>
                 )
