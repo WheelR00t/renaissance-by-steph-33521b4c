@@ -1,6 +1,6 @@
 // API Layer - Connectez ces endpoints à votre backend SQLite
 
-const API_BASE_URL = 'http://192.168.1.236:3001/api';
+const API_BASE_URL = '/api';
 
 // Types pour le backend
 export interface TimeSlot {
