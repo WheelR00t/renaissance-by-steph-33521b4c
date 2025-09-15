@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, User, Search, Eye, Clock, Tag, BookOpen } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Link } from "react-router-dom";
 
 interface Article {
   id: string;
@@ -181,9 +182,11 @@ const Blog = () => {
                     <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                       {article.content.substring(0, 150)}...
                     </p>
-                    <Button className="w-full bg-gradient-mystique shadow-warm">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Lire l'article
+                    <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
+                      <Link to={`/blog/${article.id}`}>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Lire l'article
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
