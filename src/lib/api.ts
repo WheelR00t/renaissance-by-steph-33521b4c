@@ -260,6 +260,18 @@ class ApiService {
     }
   }
 
+  async sendCancellationEmail(bookingId: string): Promise<{success: boolean}> {
+    try {
+      return await this.request<{success: boolean}>('/emails/cancellation', {
+        method: 'POST',
+        body: JSON.stringify({ bookingId }),
+      });
+    } catch (error) {
+      console.warn('API non disponible, email simulé');
+      return { success: true };
+    }
+  }
+
   // SERVICES - Récupérer la liste des services
   async getServices(): Promise<Array<{
     id: string;

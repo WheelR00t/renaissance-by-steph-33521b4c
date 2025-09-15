@@ -119,4 +119,63 @@ router.post('/reminder', async (req, res) => {
   }
 });
 
+// POST /api/emails/cancellation - Envoyer email d'annulation
+router.post('/cancellation', async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    if (!bookingId) {
+      return res.status(400).json({ error: 'bookingId requis' });
+    }
+
+    const booking = await db.get(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration
+      FROM bookings b
+      JOIN services s ON b.service_id = s.id
+      WHERE b.id = ?
+    `, [bookingId]);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #dc2626;">❌ Annulation de votre réservation</h2>
+      <p>Bonjour ${booking.first_name} ${booking.last_name},</p>
+      <p>Votre réservation a été annulée.</p>
+      
+      <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+        <h3 style="margin-top: 0; color: #7f1d1d;">📋 Détails de la réservation annulée :</h3>
+        <p><strong>Service :</strong> ${booking.service_name}</p>
+        <p><strong>Date :</strong> ${new Date(booking.date).toLocaleDateString('fr-FR')}</p>
+        <p><strong>Heure :</strong> ${booking.time}</p>
+        <p><strong>Prix :</strong> ${booking.price}€</p>
+      </div>
+      
+      <p>Si vous souhaitez reprendre un nouveau rendez-vous, n'hésitez pas à retourner sur notre site.</p>
+      <p>À bientôt,<br><strong>Stéphanie</strong><br>Renaissance by Steph ✨</p>
+    </div>`;
+
+    await transporter.sendMail({
+      from: '"Renaissance by Steph" <contact@renaissancebysteph.fr>',
+      to: booking.email,
+      subject: `❌ Annulation de réservation - ${booking.service_name}`,
+      text: `Bonjour ${booking.first_name} ${booking.last_name},\n\nVotre réservation a été annulée.\n\nService: ${booking.service_name}\nDate: ${new Date(booking.date).toLocaleDateString('fr-FR')}\nHeure: ${booking.time}\n\nÀ bientôt,\nStéphanie - Renaissance by Steph`,
+      html: emailHtml
+    });
+
+    console.log(`📧 Email d'annulation envoyé à ${booking.email}`);
+
+    res.json({
+      success: true,
+      message: 'Email d\'annulation envoyé'
+    });
+
+  } catch (error) {
+    console.error('Erreur envoi email annulation:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
