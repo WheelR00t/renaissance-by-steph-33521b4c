@@ -4,6 +4,17 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
 
+// Debug logging for all users routes
+router.use((req, res, next) => {
+  console.log(`[users] ${req.method} ${req.originalUrl} ct=${req.headers['content-type'] || ''}`);
+  next();
+});
+
+// GET /api/users/register - Info (avoid SPA 200 on GET)
+router.get('/register', (req, res) => {
+  res.status(405).json({ error: 'Méthode non autorisée. Utilisez POST pour /api/users/register.' });
+});
+
 // POST /api/users/register - Inscription
 router.post('/register', async (req, res) => {
   try {
@@ -118,6 +129,26 @@ router.get('/debug-list', async (req, res) => {
     res.json({ count: users.length, users });
   } catch (error) {
     console.error('Erreur debug-list:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.get('/debug-schema', async (req, res) => {
+  try {
+    const columns = await db.query('PRAGMA table_info(users)');
+    res.json({ columns });
+  } catch (error) {
+    console.error('Erreur debug-schema:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.get('/debug-count', async (req, res) => {
+  try {
+    const row = await db.get('SELECT COUNT(*) as count FROM users');
+    res.json(row);
+  } catch (error) {
+    console.error('Erreur debug-count:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
