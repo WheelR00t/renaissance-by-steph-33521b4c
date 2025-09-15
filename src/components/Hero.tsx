@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, Sparkles, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-mystique.jpg";
 
 const Hero = () => {
@@ -38,13 +39,17 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Button size="lg" className="bg-gradient-mystique shadow-warm hover:shadow-lg transition-all duration-300">
-              <Calendar className="h-5 w-5 mr-2" />
-              Réserver une consultation
+            <Button size="lg" className="bg-gradient-mystique shadow-warm hover:shadow-lg transition-all duration-300" asChild>
+              <Link to="/reservation">
+                <Calendar className="h-5 w-5 mr-2" />
+                Réserver une consultation
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-primary/50 hover:bg-primary/5">
-              <Heart className="h-5 w-5 mr-2" />
-              Découvrir mes services
+            <Button size="lg" variant="outline" className="border-2 border-primary/50 hover:bg-primary/5" asChild>
+              <a href="#services">
+                <Heart className="h-5 w-5 mr-2" />
+                Découvrir mes services
+              </a>
             </Button>
           </div>
 

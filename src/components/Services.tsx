@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 import tarotImage from "@/assets/service-tarot.webp";
 import reikiImage from "@/assets/service-reiki.webp";
 import pendulumImage from "@/assets/service-pendulum.webp";
@@ -127,8 +128,10 @@ const Services = () => {
                 </ul>
 
                 {/* Bouton de réservation */}
-                <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-3 rounded-lg transition-all duration-300">
-                  Réserver ce service
+                <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-3 rounded-lg transition-all duration-300" asChild>
+                  <Link to="/reservation">
+                    Réserver ce service
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -139,8 +142,10 @@ const Services = () => {
           <p className="text-muted-foreground mb-4">
             Vous hésitez ? Découvrez votre service idéal avec une consultation découverte.
           </p>
-          <Button variant="outline" size="lg" className="border-2 border-primary/50 hover:bg-primary/5">
-            Consultation découverte - 25€
+          <Button variant="outline" size="lg" className="border-2 border-primary/50 hover:bg-primary/5" asChild>
+            <Link to="/reservation">
+              Consultation découverte - 25€
+            </Link>
           </Button>
         </div>
       </div>

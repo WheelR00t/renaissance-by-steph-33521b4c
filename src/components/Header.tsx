@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Gem, Calendar, BookOpen, User } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,15 +23,15 @@ const Header = () => {
 
           {/* Navigation Desktop */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#accueil" className="text-foreground hover:text-primary transition-colors">
+            <a href="/" className="text-foreground hover:text-primary transition-colors">
               Accueil
             </a>
             <a href="#services" className="text-foreground hover:text-primary transition-colors">
               Services
             </a>
-            <a href="#rdv" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/reservation" className="text-foreground hover:text-primary transition-colors">
               Rendez-vous
-            </a>
+            </Link>
             <a href="#blog" className="text-foreground hover:text-primary transition-colors">
               Blog
             </a>
@@ -45,9 +46,11 @@ const Header = () => {
               <User className="h-4 w-4 mr-2" />
               Connexion
             </Button>
-            <Button className="bg-gradient-mystique shadow-warm">
-              <Calendar className="h-4 w-4 mr-2" />
-              Prendre RDV
+            <Button className="bg-gradient-mystique shadow-warm" asChild>
+              <Link to="/reservation">
+                <Calendar className="h-4 w-4 mr-2" />
+                Prendre RDV
+              </Link>
             </Button>
           </div>
 
@@ -64,7 +67,7 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 space-y-2">
             <a
-              href="#accueil"
+              href="/"
               className="block py-2 text-foreground hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -77,13 +80,13 @@ const Header = () => {
             >
               Services
             </a>
-            <a
-              href="#rdv"
+            <Link
+              to="/reservation"
               className="block py-2 text-foreground hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Rendez-vous
-            </a>
+            </Link>
             <a
               href="#blog"
               className="block py-2 text-foreground hover:text-primary transition-colors"
@@ -103,9 +106,11 @@ const Header = () => {
                 <User className="h-4 w-4 mr-2" />
                 Connexion
               </Button>
-              <Button className="w-full bg-gradient-mystique shadow-warm">
-                <Calendar className="h-4 w-4 mr-2" />
-                Prendre RDV
+              <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
+                <Link to="/reservation">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Prendre RDV
+                </Link>
               </Button>
             </div>
           </nav>
