@@ -1,8 +1,6 @@
 // API Layer - Connectez ces endpoints à votre backend SQLite
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://votre-domaine.com/api'  // Remplacez par votre domaine
-  : 'http://localhost:3001/api';     // Votre serveur local
+const API_BASE_URL = 'http://192.168.1.236:3001/api';
 
 // Types pour le backend
 export interface TimeSlot {
