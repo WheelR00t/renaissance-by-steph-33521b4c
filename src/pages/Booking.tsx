@@ -55,7 +55,8 @@ const Booking = () => {
   // Pré-remplir les données si l'utilisateur est connecté
   useEffect(() => {
     if (isAuthenticated && user) {
-      const [firstName, ...lastNameParts] = user.name.split(' ');
+      const safeName = typeof user.name === 'string' && user.name.trim().length > 0 ? user.name.trim() : '';
+      const [firstName, ...lastNameParts] = safeName.split(' ').filter(Boolean);
       setFormData(prev => ({
         ...prev,
         firstName: firstName || '',
