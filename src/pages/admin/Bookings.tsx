@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink, Mail } from "lucide-react";
+import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink, Mail, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api";
 
@@ -23,6 +23,7 @@ interface Booking {
   notes: string;
   visioLink?: string;
   bookingType: "guest" | "registered";
+  paymentStatus?: string;
 }
 
 const Bookings = () => {
@@ -89,6 +90,16 @@ const Bookings = () => {
     }
   };
 
+  const handleMarkAsPaid = async (id: string) => {
+    try {
+      const updated = await apiService.updateBookingById(id, { paymentStatus: 'paid' });
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, paymentStatus: 'paid' } : b));
+      toast.success("Paiement marqué comme reçu");
+    } catch (e) {
+      toast.error("Échec de la mise à jour du paiement");
+    }
+  };
+
   const handleDeleteBooking = async (id: string) => {
     try {
       await apiService.deleteBookingById(id);
@@ -114,6 +125,19 @@ const Bookings = () => {
     return type === "registered" ? 
       <Badge variant="outline">Compte client</Badge> :
       <Badge variant="outline" className="bg-blue-50 text-blue-700">Invité</Badge>;
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case "paid":
+        return <Badge className="bg-green-100 text-green-800">Payé</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
+      case "failed":
+        return <Badge variant="destructive">Échec</Badge>;
+      default:
+        return <Badge variant="outline">Non défini</Badge>;
+    }
   };
 
   return (
@@ -164,6 +188,7 @@ const Bookings = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(booking.status)}
+                  {getPaymentStatusBadge(booking.paymentStatus || 'pending')}
                   <span className="text-sm font-medium">{booking.price}€</span>
                 </div>
               </div>
@@ -292,6 +317,18 @@ const Bookings = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {(booking.paymentStatus === 'pending' || !booking.paymentStatus) && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleMarkAsPaid(booking.id)}
+                    className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                  >
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Marquer payé
+                  </Button>
+                )}
 
                 <Button 
                   size="sm" 

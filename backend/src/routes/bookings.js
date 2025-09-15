@@ -99,8 +99,8 @@ router.post('/', async (req, res) => {
       INSERT INTO bookings (
         id, service_id, date, time, first_name, last_name, 
         email, phone, address, message, booking_type, 
-        price, confirmation_token, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        price, confirmation_token, status, payment_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')
     `, [
       bookingId, serviceId, date, time, firstName, lastName,
       email, phone, address, message, bookingType,
