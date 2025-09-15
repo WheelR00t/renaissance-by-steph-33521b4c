@@ -34,6 +34,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/emails', require('./routes/emails'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/blog', require('./routes/blog'));
 
 // Route de test API
 app.get('/api', (req, res) => {

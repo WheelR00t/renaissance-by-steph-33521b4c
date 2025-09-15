@@ -10,61 +10,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Plus, Edit, Trash2, Eye, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { apiService } from "@/lib/api";
 
 interface Article {
   id: string;
   title: string;
+  slug: string;
   content: string;
   excerpt: string;
-  status: "published" | "draft" | "scheduled";
-  category: string;
-  publishDate: string;
+  status: "published" | "draft";
   author: string;
-  views: number;
+  authorId: string;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const Blog = () => {
-  const [articles, setArticles] = useState<Article[]>([
-    {
-      id: "1",
-      title: "Les bienfaits de la méditation spirituelle",
-      content: "La méditation spirituelle apporte de nombreux bienfaits...",
-      excerpt: "Découvrez comment la méditation peut transformer votre quotidien",
-      status: "published",
-      category: "Spiritualité",
-      publishDate: "2024-01-10",
-      author: "Steph",
-      views: 156
-    },
-    {
-      id: "2",
-      title: "Comprendre les cartes de Tarot",
-      content: "Les cartes de Tarot sont un outil puissant...",
-      excerpt: "Guide complet pour débuter avec les cartes de Tarot",
-      status: "draft",
-      category: "Tarot",
-      publishDate: "2024-01-20",
-      author: "Steph",
-      views: 0
-    }
-  ]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [hydrated, setHydrated] = useState(false);
-
+  // Charger les articles depuis l'API
   useEffect(() => {
-    const saved = localStorage.getItem('blogArticles');
-    if (saved) {
+    const loadArticles = async () => {
       try {
-        setArticles(JSON.parse(saved));
-      } catch {}
-    }
-    setHydrated(true);
+        const posts = await apiService.getAdminBlogPosts();
+        setArticles(posts);
+      } catch (error) {
+        console.error('Erreur chargement articles:', error);
+        toast.error('Erreur lors du chargement des articles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadArticles();
   }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem('blogArticles', JSON.stringify(articles));
-  }, [articles, hydrated]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -73,42 +54,51 @@ const Blog = () => {
     title: "",
     content: "",
     excerpt: "",
-    category: "",
     status: "draft" as Article["status"]
   });
 
   const filteredArticles = articles.filter(article =>
     article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.category.toLowerCase().includes(searchTerm.toLowerCase())
+    article.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddArticle = () => {
+  const handleAddArticle = async () => {
     if (!articleForm.title.trim() || !articleForm.content.trim()) {
       toast.error("Titre et contenu sont requis");
       return;
     }
 
-    const newArticle: Article = {
-      id: Date.now().toString(),
-      title: articleForm.title,
-      content: articleForm.content,
-      excerpt: articleForm.excerpt,
-      status: articleForm.status,
-      category: articleForm.category,
-      publishDate: new Date().toISOString().split('T')[0],
-      author: "Steph",
-      views: 0
-    };
+    try {
+      const newArticle = await apiService.createBlogPost({
+        title: articleForm.title,
+        content: articleForm.content,
+        excerpt: articleForm.excerpt,
+        status: articleForm.status
+      });
 
-    setArticles(prev => [...prev, newArticle]);
-    setArticleForm({ title: "", content: "", excerpt: "", category: "", status: "draft" });
-    setIsAddingArticle(false);
-    toast.success("Article créé avec succès");
+      setArticles(prev => [newArticle, ...prev]);
+      setArticleForm({ title: "", content: "", excerpt: "", status: "draft" });
+      setIsAddingArticle(false);
+      toast.success("Article créé avec succès");
+    } catch (error) {
+      console.error('Erreur création article:', error);
+      toast.error("Erreur lors de la création de l'article");
+    }
   };
 
-  const handleDeleteArticle = (id: string) => {
-    setArticles(prev => prev.filter(article => article.id !== id));
-    toast.success("Article supprimé");
+  const handleDeleteArticle = async (id: string) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) {
+      return;
+    }
+
+    try {
+      await apiService.deleteBlogPost(id);
+      setArticles(prev => prev.filter(article => article.id !== id));
+      toast.success("Article supprimé");
+    } catch (error) {
+      console.error('Erreur suppression article:', error);
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   const getStatusBadge = (status: Article["status"]) => {
@@ -117,8 +107,6 @@ const Blog = () => {
         return <Badge className="bg-green-100 text-green-800">Publié</Badge>;
       case "draft":
         return <Badge variant="secondary">Brouillon</Badge>;
-      case "scheduled":
-        return <Badge className="bg-blue-100 text-blue-800">Programmé</Badge>;
     }
   };
 
@@ -162,29 +150,17 @@ const Blog = () => {
                   rows={2}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Catégorie</Label>
-                  <Input
-                    id="category"
-                    value={articleForm.category}
-                    onChange={(e) => setArticleForm(prev => ({ ...prev, category: e.target.value }))}
-                    placeholder="Spiritualité, Tarot..."
-                  />
-                </div>
-                <div>
-                  <Label>Statut</Label>
-                  <Select value={articleForm.status} onValueChange={(value) => setArticleForm(prev => ({ ...prev, status: value as Article["status"] }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Brouillon</SelectItem>
-                      <SelectItem value="published">Publié</SelectItem>
-                      <SelectItem value="scheduled">Programmé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label>Statut</Label>
+                <Select value={articleForm.status} onValueChange={(value) => setArticleForm(prev => ({ ...prev, status: value as Article["status"] }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="published">Publié</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="content">Contenu *</Label>
@@ -235,13 +211,9 @@ const Blog = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {article.publishDate}
+                      {new Date(article.publishedAt || article.createdAt).toLocaleDateString('fr-FR')}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      {article.views} vues
-                    </span>
-                    <Badge variant="outline">{article.category}</Badge>
+                    <span>Par {article.author}</span>
                   </div>
                 </div>
                 
@@ -251,7 +223,7 @@ const Blog = () => {
                     Modifier
                   </Button>
                   <Button size="sm" variant="outline" asChild>
-                    <Link to={`/blog/${article.id}`} target="_blank">
+                    <Link to={`/blog/${article.slug}`} target="_blank">
                       <Eye className="h-4 w-4 mr-1" />
                       Prévisualiser
                     </Link>

@@ -327,6 +327,64 @@ class ApiService {
       return [];
     }
   }
+
+  // BLOG - Récupérer tous les articles publiés
+  async getBlogPosts(category?: string, limit = 10, offset = 0): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+    
+    return await this.request<any[]>(`/blog?${params.toString()}`);
+  }
+
+  // BLOG - Récupérer un article par slug
+  async getBlogPost(slug: string): Promise<any> {
+    return await this.request<any>(`/blog/${slug}`);
+  }
+
+  // BLOG ADMIN - Récupérer tous les articles (admin)
+  async getAdminBlogPosts(status = 'all', limit = 50, offset = 0): Promise<any[]> {
+    const params = new URLSearchParams();
+    params.append('status', status);
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+    
+    return await this.request<any[]>(`/blog/admin?${params.toString()}`);
+  }
+
+  // BLOG ADMIN - Créer un article
+  async createBlogPost(postData: {
+    title: string;
+    content: string;
+    excerpt?: string;
+    status?: 'draft' | 'published';
+  }): Promise<any> {
+    return await this.request<any>('/blog', {
+      method: 'POST',
+      body: JSON.stringify(postData)
+    });
+  }
+
+  // BLOG ADMIN - Modifier un article
+  async updateBlogPost(id: string, postData: {
+    title?: string;
+    content?: string;
+    excerpt?: string;
+    status?: 'draft' | 'published';
+  }): Promise<any> {
+    return await this.request<any>(`/blog/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(postData)
+    });
+  }
+
+  // BLOG ADMIN - Supprimer un article
+  async deleteBlogPost(id: string): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>(`/blog/${id}`, {
+      method: 'DELETE'
+    });
+  }
 }
 
 export const apiService = new ApiService();

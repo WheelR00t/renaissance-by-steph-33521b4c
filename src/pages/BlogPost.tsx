@@ -1,123 +1,142 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Eye, User, ArrowLeft } from "lucide-react";
+import { Calendar, User, ArrowLeft, BookOpen } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
+import { apiService } from "@/lib/api";
 
 interface Article {
   id: string;
   title: string;
+  slug: string;
   content: string;
   excerpt: string;
-  status: "published" | "draft" | "archived" | "scheduled";
-  category: string;
-  publishDate: string;
   author: string;
-  views: number;
+  publishedAt: string;
 }
 
 const BlogPost = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<Article | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("blogArticles");
-    if (saved) {
+    const loadArticle = async () => {
+      if (!slug) return;
+      
       try {
-        const list: Article[] = JSON.parse(saved);
-        const found = list.find((a) => a.id === id && a.status === "published");
-        if (found) {
-          setArticle(found);
-          document.title = `${found.title} • Blog`;
-        } else {
-          setNotFound(true);
-        }
-      } catch {
-        setNotFound(true);
+        const post = await apiService.getBlogPost(slug);
+        setArticle(post);
+      } catch (error) {
+        console.error('Erreur chargement article:', error);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setNotFound(true);
-    }
-  }, [id]);
+    };
 
-  const formattedDate = useMemo(() => {
-    if (!article?.publishDate) return "";
-    return new Date(article.publishDate).toLocaleDateString("fr-FR");
-  }, [article?.publishDate]);
+    loadArticle();
+  }, [slug]);
 
-  return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end">
-        <section className="py-10 px-4">
-          <div className="container mx-auto max-w-4xl">
-            <div className="mb-6">
-              <Button variant="outline" asChild>
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Chargement de l'article...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!article) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end flex items-center justify-center">
+          <Card className="max-w-md mx-auto text-center p-8">
+            <CardContent>
+              <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-4">Article non trouvé</h2>
+              <Button asChild>
                 <Link to="/blog">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Retour au blog
                 </Link>
               </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SEO 
+        title={`${article.title} - Renaissance by Steph`}
+        description={article.excerpt}
+        type="article"
+        publishedTime={article.publishedAt}
+        author={article.author}
+      />
+      <Header />
+      
+      <article className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end">
+        <section className="relative py-20 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <nav className="mb-8">
+              <Button variant="ghost" asChild className="text-white hover:bg-white/10">
+                <Link to="/blog">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Retour au blog
+                </Link>
+              </Button>
+            </nav>
+            
+            <div className="text-center text-white mb-8">
+              <h1 className="text-3xl md:text-5xl font-bold mb-6">
+                {article.title}
+              </h1>
+              
+              <div className="flex items-center justify-center gap-6 text-white/80 mb-6">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{article.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
+                </div>
+              </div>
             </div>
-
-            {notFound && (
-              <Card className="bg-white">
-                <CardHeader>
-                  <CardTitle>Article introuvable</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  Cet article n'existe pas ou n'est pas publié.
-                </CardContent>
-              </Card>
-            )}
-
-            {article && (
-              <Card className="overflow-hidden bg-white">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className="bg-gradient-mystique text-white">
-                      {article.category}
-                    </Badge>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center">
-                        <User className="h-4 w-4 mr-1" />
-                        {article.author}
-                      </span>
-                      <span className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formattedDate}
-                      </span>
-                      <span className="flex items-center">
-                        <Eye className="h-4 w-4 mr-1" />
-                        {article.views} vues
-                      </span>
-                    </div>
-                  </div>
-                  <CardTitle className="text-3xl leading-tight">
-                    {article.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-neutral max-w-none">
-                    {article.excerpt && (
-                      <p className="text-lg text-muted-foreground mb-6">{article.excerpt}</p>
-                    )}
-                    {article.content.split("\n\n").map((para, idx) => (
-                      <p key={idx} className="mb-4">
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </section>
-      </main>
+
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <Card className="shadow-xl">
+              <CardContent className="p-8 md:p-12">
+                <div className="prose prose-lg max-w-none">
+                  {article.content.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="mb-6 text-muted-foreground leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      </article>
+      
       <Footer />
     </>
   );

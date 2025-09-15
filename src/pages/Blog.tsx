@@ -6,18 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Calendar, User, Search, Eye, Clock, Tag, BookOpen } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Link } from "react-router-dom";
+import { apiService } from "@/lib/api";
 
 interface Article {
   id: string;
   title: string;
+  slug: string;
   content: string;
   excerpt: string;
-  status: "published" | "draft" | "archived";
-  category: string;
-  publishDate: string;
+  status: "published" | "draft";
   author: string;
-  views: number;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const Blog = () => {
@@ -25,76 +28,79 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Articles par défaut (serviront aussi à initialiser le stockage)
+  // Articles par défaut (pour fallback)
   const defaultArticles: Article[] = [
     {
       id: "1",
       title: "Les Bienfaits de la Méditation Quotidienne",
+      slug: "bienfaits-meditation-quotidienne",
       content: "La méditation est une pratique millénaire qui apporte de nombreux bienfaits pour le corps et l'esprit. Dans notre monde moderne, prendre quelques minutes chaque jour pour méditer peut transformer votre vie...",
       excerpt: "Découvrez comment la méditation quotidienne peut transformer votre bien-être physique et mental.",
       status: "published",
-      category: "Bien-être",
-      publishDate: "2024-01-15",
+      publishedAt: "2024-01-15",
       author: "Stéphanie",
-      views: 245
+      createdAt: "2024-01-15",
+      updatedAt: "2024-01-15"
     },
     {
       id: "2", 
       title: "Comprendre les Énergies lors d'une Séance de Reiki",
+      slug: "comprendre-energies-reiki",
       content: "Le Reiki est une technique de guérison énergétique qui permet de rééquilibrer les chakras et d'harmoniser l'énergie vitale. Pendant une séance, plusieurs phénomènes peuvent se manifester...",
       excerpt: "Apprenez à reconnaître et comprendre les différentes sensations énergétiques durant une séance de Reiki.",
       status: "published",
-      category: "Spiritualité",
-      publishDate: "2024-01-10",
-      author: "Stéphanie", 
-      views: 189
+      publishedAt: "2024-01-10",
+      author: "Stéphanie",
+      createdAt: "2024-01-10",
+      updatedAt: "2024-01-10"
     },
     {
       id: "3",
       title: "L'Art de la Lecture des Cartes de Tarot",
+      slug: "art-lecture-cartes-tarot",
       content: "Le tarot est un outil divinatoire puissant qui nous aide à comprendre notre passé, présent et futur. Chaque carte porte une symbolique riche et des messages profonds...",
       excerpt: "Plongez dans l'univers fascinant du tarot et découvrez les secrets de la lecture des cartes.",
       status: "published",
-      category: "Voyance",
-      publishDate: "2024-01-05",
+      publishedAt: "2024-01-05",
       author: "Stéphanie",
-      views: 312
+      createdAt: "2024-01-05",
+      updatedAt: "2024-01-05"
     }
   ];
 
-  // Charger et synchroniser avec localStorage (clé partagée: 'blogArticles')
+  // Charger les articles depuis l'API
   useEffect(() => {
-    const saved = localStorage.getItem('blogArticles');
-    if (saved) {
+    const loadArticles = async () => {
       try {
-        const allArticles = JSON.parse(saved) as Article[];
-        setArticles(allArticles.filter(a => a.status === 'published'));
-      } catch {
+        const posts = await apiService.getBlogPosts();
+        setArticles(posts);
+      } catch (error) {
+        console.error('Erreur chargement articles:', error);
+        // Fallback vers les articles par défaut
         setArticles(defaultArticles);
       }
-    } else {
-      localStorage.setItem('blogArticles', JSON.stringify(defaultArticles));
-      setArticles(defaultArticles);
-    }
+    };
+    
+    loadArticles();
   }, []);
 
   const displayedArticles = articles;
 
-  // Filtrer les articles selon la recherche et la catégorie
+  // Filtrer les articles selon la recherche
   const filteredArticles = displayedArticles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || article.category === selectedCategory;
+                         article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
-
-  // Obtenir toutes les catégories uniques
-  const categories = ["all", ...Array.from(new Set(displayedArticles.map(article => article.category)))];
 
   return (
     <>
+      <SEO 
+        title="Blog - Renaissance by Steph | Articles sur la Voyance et le Bien-être"
+        description="Découvrez nos articles sur la voyance, le reiki, la spiritualité et le développement personnel. Conseils pratiques et enseignements spirituels par Stéphanie."
+        keywords={["blog voyance", "articles reiki", "spiritualité", "développement personnel", "conseils bien-être", "tarot", "méditation"]}
+      />
       <Header />
       <div className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end">
         {/* Hero Section */}
@@ -125,20 +131,6 @@ const Blog = () => {
                     className="pl-10 h-12"
                   />
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  {categories.map((category) => (
-                    <Button
-                      key={category}
-                      variant={selectedCategory === category ? "default" : "outline"}
-                      onClick={() => setSelectedCategory(category)}
-                      size="sm"
-                      className={selectedCategory === category ? "bg-gradient-mystique" : ""}
-                    >
-                      <Tag className="h-4 w-4 mr-1" />
-                      {category === "all" ? "Tous" : category}
-                    </Button>
-                  ))}
-                </div>
               </div>
 
               {/* Articles Count */}
@@ -152,15 +144,6 @@ const Blog = () => {
               {filteredArticles.map((article) => (
                 <Card key={article.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 bg-white">
                   <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="secondary" className="bg-gradient-mystique text-white">
-                        {article.category}
-                      </Badge>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Eye className="h-4 w-4 mr-1" />
-                        {article.views}
-                      </div>
-                    </div>
                     <CardTitle className="text-xl hover:text-primary transition-colors cursor-pointer line-clamp-2">
                       {article.title}
                     </CardTitle>
@@ -176,14 +159,14 @@ const Blog = () => {
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(article.publishDate).toLocaleDateString('fr-FR')}
+                        {new Date(article.publishedAt).toLocaleDateString('fr-FR')}
                       </div>
                     </div>
                     <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                       {article.content.substring(0, 150)}...
                     </p>
                     <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
-                      <Link to={`/blog/${article.id}`}>
+                      <Link to={`/blog/${article.slug}`}>
                         <BookOpen className="h-4 w-4 mr-2" />
                         Lire l'article
                       </Link>
@@ -204,10 +187,7 @@ const Blog = () => {
                   </p>
                   <Button 
                     variant="outline" 
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedCategory("all");
-                    }}
+                    onClick={() => setSearchTerm("")}
                   >
                     Réinitialiser les filtres
                   </Button>
