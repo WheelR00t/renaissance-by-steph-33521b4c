@@ -12,8 +12,7 @@ router.get('/', async (req, res) => {
       SELECT bp.*, u.first_name, u.last_name 
       FROM blog_posts bp 
       JOIN users u ON bp.author_id = u.id 
-      WHERE bp.status = 'published' 
-      AND bp.published_at <= datetime('now')
+      WHERE bp.status = 'published'
     `;
     const params = [];
 
@@ -154,7 +153,9 @@ router.post('/', async (req, res) => {
 
     const postId = uuidv4();
     const adminId = 'admin-1'; // ID de l'admin par défaut
-    const publishedAt = status === 'published' ? new Date().toISOString() : null;
+    const publishedAt = status === 'published' 
+      ? new Date().toISOString().replace('T', ' ').replace('Z', '').slice(0, 19)
+      : null;
 
     await db.run(`
       INSERT INTO blog_posts (id, title, slug, content, excerpt, author_id, status, published_at)
@@ -231,7 +232,7 @@ router.put('/:id', async (req, res) => {
         const currentPost = await db.get('SELECT published_at FROM blog_posts WHERE id = ?', [id]);
         if (!currentPost.published_at) {
           updates.push('published_at = ?');
-          params.push(new Date().toISOString());
+          params.push(new Date().toISOString().replace('T', ' ').replace('Z', '').slice(0, 19));
         }
       }
     }
