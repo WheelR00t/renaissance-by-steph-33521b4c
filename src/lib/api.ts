@@ -220,14 +220,20 @@ class ApiService {
     isActive: boolean;
   }>> {
     try {
+      // D'abord essayer localStorage (synchronisé avec admin)
+      const saved = localStorage.getItem('homePageServices');
+      if (saved) {
+        const services = JSON.parse(saved).filter((s: any) => s.isActive);
+        if (services.length > 0) {
+          return services;
+        }
+      }
+
+      // Sinon essayer l'API (sera disponible après déploiement backend)
       return await this.request<Array<any>>('/services');
     } catch (error) {
       console.warn('API non disponible, services par défaut');
-      // Récupérer depuis localStorage (synchronisé avec admin)
-      const saved = localStorage.getItem('homePageServices');
-      if (saved) {
-        return JSON.parse(saved).filter((s: any) => s.isActive);
-      }
+      // Fallback pour le développement
       return [
         { id: "tarot", name: "Tirage de Cartes", price: 45, duration: "30-60 min", description: "", isActive: true },
         { id: "reiki", name: "Séance Reiki", price: 60, duration: "45-90 min", description: "", isActive: true },

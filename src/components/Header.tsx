@@ -23,10 +23,10 @@ const Header = () => {
 
           {/* Navigation Desktop */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/" className="text-foreground hover:text-primary transition-colors">
               Accueil
-            </a>
-            <a href="#services" className="text-foreground hover:text-primary transition-colors">
+            </Link>
+            <a href="/#services" className="text-foreground hover:text-primary transition-colors">
               Services
             </a>
             <Link to="/reservation" className="text-foreground hover:text-primary transition-colors">
@@ -42,9 +42,11 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Connexion
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/login">
+                <User className="h-4 w-4 mr-2" />
+                Connexion
+              </Link>
             </Button>
             <Button className="bg-gradient-mystique shadow-warm" asChild>
               <Link to="/reservation">
@@ -66,15 +68,15 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 space-y-2">
-            <a
-              href="/"
+            <Link
+              to="/"
               className="block py-2 text-foreground hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Accueil
-            </a>
+            </Link>
             <a
-              href="#services"
+              href="/#services"
               className="block py-2 text-foreground hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -102,9 +104,11 @@ const Header = () => {
               Contact
             </Link>
             <div className="pt-4 space-y-2">
-              <Button variant="ghost" className="w-full">
-                <User className="h-4 w-4 mr-2" />
-                Connexion
+              <Button variant="ghost" className="w-full" asChild>
+                <Link to="/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Connexion
+                </Link>
               </Button>
               <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
                 <Link to="/reservation">
