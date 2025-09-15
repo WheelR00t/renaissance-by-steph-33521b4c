@@ -3,6 +3,18 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require('nodemailer');
+
+// Configuration du transporteur email
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: Number(process.env.EMAIL_PORT) === 465,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // GET /api/payments/list - Liste des paiements (à partir des réservations)
 router.get('/list', async (req, res) => {
@@ -114,6 +126,48 @@ router.post('/confirm', async (req, res) => {
       JOIN services s ON b.service_id = s.id
       WHERE b.id = ?
     `, [bookingId]);
+
+    // Envoyer automatiquement l'email de confirmation
+    try {
+      const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #6366f1;">✨ Confirmation de votre réservation</h2>
+        <p>Bonjour ${updatedBooking.first_name} ${updatedBooking.last_name},</p>
+        <p>Votre réservation a été confirmée avec succès et votre paiement a été accepté !</p>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1f2937;">📋 Détails de votre réservation :</h3>
+          <p><strong>Service :</strong> ${updatedBooking.service_name}</p>
+          <p><strong>Date :</strong> ${new Date(updatedBooking.date).toLocaleDateString('fr-FR')}</p>
+          <p><strong>Heure :</strong> ${updatedBooking.time}</p>
+          <p><strong>Durée :</strong> ${updatedBooking.service_duration}</p>
+          <p><strong>Prix :</strong> ${updatedBooking.price}€</p>
+          <p><strong>Statut :</strong> <span style="color: #10b981;">✅ Confirmé et payé</span></p>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>🔗 Lien de suivi de votre réservation :</strong></p>
+          <p style="margin: 5px 0;"><a href="${process.env.FRONTEND_URL}/reservation/confirmation?token=${updatedBooking.id}" style="color: #6366f1; text-decoration: none;">${process.env.FRONTEND_URL}/reservation/confirmation?token=${updatedBooking.id}</a></p>
+          <p style="margin: 0; font-size: 0.9em; color: #6b7280;">Conservez ce lien pour accéder aux détails de votre séance et au lien visio le jour J.</p>
+        </div>
+        
+        <p>Je vous contacterai prochainement pour finaliser les derniers détails et vous communiquer le lien de visioconférence si nécessaire.</p>
+        <p>À très bientôt,<br><strong>Stéphanie</strong><br>Renaissance by Steph ✨</p>
+      </div>`;
+
+      await transporter.sendMail({
+        from: '"Renaissance by Steph" <contact@renaissancebysteph.fr>',
+        to: updatedBooking.email,
+        subject: `✨ Réservation confirmée - ${updatedBooking.service_name}`,
+        text: `Bonjour ${updatedBooking.first_name} ${updatedBooking.last_name},\n\nVotre réservation a été confirmée et votre paiement accepté !\n\nService: ${updatedBooking.service_name}\nDate: ${new Date(updatedBooking.date).toLocaleDateString('fr-FR')}\nHeure: ${updatedBooking.time}\nPrix: ${updatedBooking.price}€\n\nLien de suivi: ${process.env.FRONTEND_URL}/reservation/confirmation?token=${updatedBooking.id}\n\nÀ bientôt,\nStéphanie - Renaissance by Steph`,
+        html: emailHtml
+      });
+
+      console.log(`📧 Email de confirmation automatiquement envoyé à ${updatedBooking.email}`);
+    } catch (emailError) {
+      console.error('⚠️  Erreur envoi email automatique:', emailError);
+      // On ne fait pas échouer la réponse si l'email échoue
+    }
 
     res.json({
       success: true,
