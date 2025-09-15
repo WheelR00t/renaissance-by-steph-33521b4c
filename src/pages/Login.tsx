@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,7 +17,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || "/admin";
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -26,14 +32,15 @@ const Login = () => {
 
     setLoading(true);
     
-    // Ici vous appellerez votre API de connexion
     try {
-      // Simulation d'un appel API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const ok = await login(email, password);
+      if (!ok) {
+        toast.error("Email ou mot de passe incorrect");
+        return;
+      }
+
       toast.success("Connexion réussie !");
-      // Redirection vers le tableau de bord ou la page de réservation
-      window.location.href = "/reservation";
+      navigate(from, { replace: true });
     } catch (error) {
       toast.error("Email ou mot de passe incorrect");
     } finally {
