@@ -135,12 +135,12 @@ const BlogPost = () => {
             </nav>
             
             {!article.imageUrl && (
-              <div className="text-center text-white mb-8">
+              <div className="text-center text-foreground mb-8">
                 <h1 className="text-3xl md:text-5xl font-bold mb-6">
                   {article.title}
                 </h1>
                 
-                <div className="flex items-center justify-center gap-6 text-white/80 mb-6">
+                <div className="flex items-center justify-center gap-6 text-muted-foreground mb-6">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     <span>{article.author}</span>
