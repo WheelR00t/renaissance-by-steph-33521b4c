@@ -4,6 +4,18 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const db = require('../database/db');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const nodemailer = require('nodemailer');
+
+// Configuration du transporteur email
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: Number(process.env.EMAIL_PORT) === 465,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // GET /api/bookings/:token - Récupérer une réservation par son token (public)
 router.get('/:token', async (req, res) => {
@@ -288,6 +300,18 @@ router.put('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status, paymentStatus, visioLink } = req.body;
 
+    // Récupérer les données actuelles pour savoir si on passe à "cancelled"
+    const currentBooking = await db.get(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      WHERE b.id = ?
+    `, [id]);
+
+    if (!currentBooking) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
     const updates = [];
     const params = [];
 
@@ -305,6 +329,42 @@ router.put('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
     await db.run(`
       UPDATE bookings SET ${updates.join(', ')} WHERE id = ?
     `, params);
+
+    // Si le statut passe à "cancelled", envoyer automatiquement l'email d'annulation
+    if (status === 'cancelled' && currentBooking.status !== 'cancelled') {
+      try {
+        const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #dc2626;">❌ Annulation de votre réservation</h2>
+          <p>Bonjour ${currentBooking.first_name} ${currentBooking.last_name},</p>
+          <p>Votre réservation a été annulée.</p>
+          
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <h3 style="margin-top: 0; color: #7f1d1d;">📋 Détails de la réservation annulée :</h3>
+            <p><strong>Service :</strong> ${currentBooking.service_name}</p>
+            <p><strong>Date :</strong> ${new Date(currentBooking.date).toLocaleDateString('fr-FR')}</p>
+            <p><strong>Heure :</strong> ${currentBooking.time}</p>
+            <p><strong>Prix :</strong> ${currentBooking.price}€</p>
+          </div>
+          
+          <p>Si vous souhaitez reprendre un nouveau rendez-vous, n'hésitez pas à retourner sur notre site.</p>
+          <p>À bientôt,<br><strong>Stéphanie</strong><br>Renaissance by Steph ✨</p>
+        </div>`;
+
+        await transporter.sendMail({
+          from: '"Renaissance by Steph" <contact@renaissancebysteph.fr>',
+          to: currentBooking.email,
+          subject: `❌ Annulation de réservation - ${currentBooking.service_name}`,
+          text: `Bonjour ${currentBooking.first_name} ${currentBooking.last_name},\n\nVotre réservation a été annulée.\n\nService: ${currentBooking.service_name}\nDate: ${new Date(currentBooking.date).toLocaleDateString('fr-FR')}\nHeure: ${currentBooking.time}\n\nÀ bientôt,\nStéphanie - Renaissance by Steph`,
+          html: emailHtml
+        });
+
+        console.log(`📧 Email d'annulation automatiquement envoyé à ${currentBooking.email}`);
+      } catch (emailError) {
+        console.error('⚠️  Erreur envoi email annulation automatique:', emailError);
+        // On ne fait pas échouer la réponse si l'email échoue
+      }
+    }
 
     const updated = await db.get(`
       SELECT b.*, s.name as service_name
@@ -338,6 +398,54 @@ router.put('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
 router.delete('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Récupérer les détails de la réservation avant suppression pour l'email
+    const booking = await db.get(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      WHERE b.id = ?
+    `, [id]);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    // Envoyer automatiquement l'email d'annulation avant suppression
+    try {
+      const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #dc2626;">❌ Annulation de votre réservation</h2>
+        <p>Bonjour ${booking.first_name} ${booking.last_name},</p>
+        <p>Votre réservation a été annulée et supprimée de notre système.</p>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="margin-top: 0; color: #7f1d1d;">📋 Détails de la réservation annulée :</h3>
+          <p><strong>Service :</strong> ${booking.service_name || booking.service_id}</p>
+          <p><strong>Date :</strong> ${new Date(booking.date).toLocaleDateString('fr-FR')}</p>
+          <p><strong>Heure :</strong> ${booking.time}</p>
+          <p><strong>Prix :</strong> ${booking.price}€</p>
+        </div>
+        
+        <p>Si vous souhaitez reprendre un nouveau rendez-vous, n'hésitez pas à retourner sur notre site.</p>
+        <p>À bientôt,<br><strong>Stéphanie</strong><br>Renaissance by Steph ✨</p>
+      </div>`;
+
+      await transporter.sendMail({
+        from: '"Renaissance by Steph" <contact@renaissancebysteph.fr>',
+        to: booking.email,
+        subject: `❌ Annulation de réservation - ${booking.service_name || booking.service_id}`,
+        text: `Bonjour ${booking.first_name} ${booking.last_name},\n\nVotre réservation a été annulée et supprimée.\n\nService: ${booking.service_name || booking.service_id}\nDate: ${new Date(booking.date).toLocaleDateString('fr-FR')}\nHeure: ${booking.time}\n\nÀ bientôt,\nStéphanie - Renaissance by Steph`,
+        html: emailHtml
+      });
+
+      console.log(`📧 Email d'annulation automatiquement envoyé à ${booking.email} (suppression)`);
+    } catch (emailError) {
+      console.error('⚠️  Erreur envoi email annulation automatique (suppression):', emailError);
+      // On ne fait pas échouer la suppression si l'email échoue
+    }
+
+    // Supprimer la réservation
     await db.run('DELETE FROM bookings WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (error) {

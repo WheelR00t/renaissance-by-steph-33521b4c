@@ -57,9 +57,17 @@ const Bookings = () => {
 
   const handleUpdateStatus = async (id: string, newStatus: Booking["status"]) => {
     try {
+      const booking = bookings.find(b => b.id === id);
+      const wasNotCancelled = booking?.status !== 'cancelled';
+      
       const updated = await apiService.updateBookingById(id, { status: newStatus });
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: updated.status } : b));
-      toast.success("Statut mis à jour");
+      
+      if (newStatus === 'cancelled' && wasNotCancelled) {
+        toast.success("Statut mis à jour - Email d'annulation envoyé automatiquement");
+      } else {
+        toast.success("Statut mis à jour");
+      }
     } catch (e) {
       toast.error("Échec de la mise à jour du statut");
     }
@@ -90,6 +98,15 @@ const Bookings = () => {
     }
   };
 
+  const handleSendCancellation = async (id: string) => {
+    try {
+      await apiService.sendCancellationEmail(id);
+      toast.success("Email d'annulation envoyé");
+    } catch (e) {
+      toast.error("Échec de l'envoi de l'email d'annulation");
+    }
+  };
+
   const handleMarkAsPaid = async (id: string) => {
     try {
       const updated = await apiService.updateBookingById(id, { paymentStatus: 'paid' });
@@ -104,7 +121,7 @@ const Bookings = () => {
     try {
       await apiService.deleteBookingById(id);
       setBookings(prev => prev.filter(booking => booking.id !== id));
-      toast.success("Réservation supprimée");
+      toast.success("Réservation supprimée - Email d'annulation envoyé automatiquement");
     } catch (e) {
       toast.error("Échec de la suppression");
     }
@@ -337,6 +354,18 @@ const Bookings = () => {
                 >
                   <Mail className="h-4 w-4 mr-1" />
                   Envoyer confirmation
+                </Button>
+
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleSendCancellation(booking.id)}
+                  className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+                  disabled={booking.status === 'cancelled'}
+                  title={booking.status === 'cancelled' ? 'Cette réservation est déjà annulée' : 'Envoyer un email d\'annulation'}
+                >
+                  <Mail className="h-4 w-4 mr-1" />
+                  Envoyer annulation
                 </Button>
 
                 <Button 
