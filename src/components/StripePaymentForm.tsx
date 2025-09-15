@@ -71,7 +71,14 @@ const StripePaymentForm = ({
         if (result.success) {
           setIsComplete(true);
           toast.success('Paiement confirmé ! Vous allez recevoir un email de confirmation.');
-          // L'email de confirmation est maintenant envoyé automatiquement côté serveur
+          // Best-effort: tenter l'envoi d'email côté API (sera ignoré si protégé/admin)
+          try {
+            if (booking.id) {
+              await apiService.sendConfirmationEmail(booking.id);
+            }
+          } catch (e) {
+            console.warn('Envoi email (fallback) ignoré:', e);
+          }
           onPaymentSuccess(result.booking);
         } else {
           throw new Error('Échec de la confirmation côté serveur');
