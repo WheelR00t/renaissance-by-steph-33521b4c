@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink } from "lucide-react";
+import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api";
 
@@ -77,6 +77,15 @@ const Bookings = () => {
       toast.success("Lien visio mis à jour");
     } catch (e) {
       toast.error("Échec de la mise à jour du lien visio");
+    }
+  };
+
+  const handleSendConfirmation = async (id: string) => {
+    try {
+      await apiService.sendConfirmationEmail(id);
+      toast.success("Email de confirmation envoyé");
+    } catch (e) {
+      toast.error("Échec de l'envoi de l'email");
     }
   };
 
@@ -283,6 +292,15 @@ const Bookings = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleSendConfirmation(booking.id)}
+                >
+                  <Mail className="h-4 w-4 mr-1" />
+                  Envoyer confirmation
+                </Button>
 
                 <Button 
                   size="sm" 

@@ -4,14 +4,14 @@ const db = require('../database/db');
 const nodemailer = require('nodemailer');
 
 // Configuration du transporteur email
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false, // true pour 465, false pour autres ports
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: Number(process.env.EMAIL_PORT) === 465, // true pour 465 (SSL), false pour 587 (STARTTLS)
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
 // POST /api/emails/confirmation - Envoyer email de confirmation
