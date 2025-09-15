@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
 class Database {
   constructor() {
@@ -81,7 +82,7 @@ class Database {
   seedAdmin() {
     const desiredId = 'admin-1';
     const email = 'admin@renaissancebysteph.fr';
-    const hashedPassword = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8R8.lR1BQrQ9/WuCJWs3f5j6s9Y5OG'; // admin123
+    const hashedPassword = bcrypt.hashSync('admin123', 10);
 
     // Si un enregistrement existe déjà avec le même id OU le même email, on met à jour, sinon on insère
     this.db.get('SELECT id, email FROM users WHERE id = ? OR email = ?', [desiredId, email], (err, row) => {
