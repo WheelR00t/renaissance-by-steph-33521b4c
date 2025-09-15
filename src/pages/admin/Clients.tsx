@@ -195,20 +195,18 @@ const Clients = () => {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-lg">{client.name}</CardTitle>
-                      <CardDescription>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            {client.email}
-                          </div>
-                          {client.phone && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4" />
-                              {client.phone}
-                            </div>
-                          )}
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          {client.email}
                         </div>
-                      </CardDescription>
+                        {client.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            {client.phone}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(client.status)}
