@@ -8,33 +8,51 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Renaissance By Steph Color Palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 260 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 260 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 260 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Orange mystique comme couleur principale */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 25 100% 75%;
+    --primary-dark: 25 85% 45%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Violet spirituel comme couleur secondaire */
+    --secondary: 270 50% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 270 60% 70%;
+    --secondary-dark: 270 60% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 260 10% 96%;
+    --muted-foreground: 260 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 270 50% 95%;
+    --accent-foreground: 270 50% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 260 15% 90%;
+    --input: 260 15% 95%;
+    --ring: 25 95% 53%;
+
+    /* Gradients mystiques */
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 85% 45%));
+    --gradient-secondary: linear-gradient(135deg, hsl(270 50% 40%), hsl(270 60% 25%));
+    --gradient-mystique: linear-gradient(135deg, hsl(25 95% 53%), hsl(270 50% 40%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(260 10% 98%));
+
+    /* Ombres élégantes */
+    --shadow-mystique: 0 10px 40px -10px hsl(270 50% 40% / 0.3);
+    --shadow-warm: 0 8px 32px -8px hsl(25 95% 53% / 0.3);
+    --shadow-elegant: 0 4px 20px -4px hsl(260 15% 15% / 0.1);
 
     --radius: 0.5rem;
 
