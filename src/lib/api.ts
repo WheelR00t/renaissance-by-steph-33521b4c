@@ -403,7 +403,23 @@ class ApiService {
       method: 'DELETE'
     });
   }
+
+  // DASHBOARD - Stats
+  async getDashboardStats(): Promise<any> {
+    return await this.request<any>('/dashboard/stats');
+  }
+
+  // DASHBOARD - Activité récente
+  async getDashboardActivity(): Promise<any[]> {
+    return await this.request<any[]>('/dashboard/activity');
+  }
+
+  // DASHBOARD - RDV du jour
+  async getTodayAppointments(): Promise<any[]> {
+    return await this.request<any[]>('/dashboard/today-appointments');
+  }
 }
+
 
 export const apiService = new ApiService();
 

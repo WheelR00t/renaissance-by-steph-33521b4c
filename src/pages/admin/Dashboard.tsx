@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { apiService } from "@/lib/api";
 
 interface DashboardStats {
   todayAppointments: number;
@@ -66,28 +67,17 @@ const Dashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const baseUrl = window.location.origin;
-      
-      // Récupérer les statistiques
-      const statsResponse = await fetch(`${baseUrl}/api/dashboard/stats`);
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
+      // Récupérer les statistiques (avec Auth via apiService)
+      const statsData = await apiService.getDashboardStats();
+      setStats(statsData);
 
       // Récupérer l'activité récente
-      const activityResponse = await fetch(`${baseUrl}/api/dashboard/activity`);
-      if (activityResponse.ok) {
-        const activityData = await activityResponse.json();
-        setRecentActivity(activityData);
-      }
+      const activityData = await apiService.getDashboardActivity();
+      setRecentActivity(activityData);
 
       // Récupérer les RDV du jour
-      const appointmentsResponse = await fetch(`${baseUrl}/api/dashboard/today-appointments`);
-      if (appointmentsResponse.ok) {
-        const appointmentsData = await appointmentsResponse.json();
-        setTodayAppointments(appointmentsData);
-      }
+      const appointmentsData = await apiService.getTodayAppointments();
+      setTodayAppointments(appointmentsData);
     } catch (error) {
       console.error('Erreur lors du chargement du dashboard:', error);
     } finally {
@@ -285,7 +275,7 @@ const Dashboard = () => {
       </div>
 
       {/* RDV du jour */}
-      <Card>
+      <Card ref={appointmentsRef}>
         <CardHeader>
           <CardTitle>Rendez-vous d'Aujourd'hui</CardTitle>
           <CardDescription>
