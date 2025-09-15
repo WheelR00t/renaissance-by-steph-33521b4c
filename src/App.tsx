@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import Contact from "./pages/Contact";
 import PublicBlog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Services from "./pages/admin/Services";
@@ -46,6 +47,13 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/blog" element={<PublicBlog />} />
             <Route path="/blog/:id" element={<BlogPost />} />
+            
+            {/* Route Espace client - Protégée */}
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <ClientDashboard />
+              </ProtectedRoute>
+            } />
             
             {/* Routes Admin - Protégées */}
             <Route path="/admin" element={

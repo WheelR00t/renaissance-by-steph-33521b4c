@@ -20,7 +20,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || "/admin";
+  const from = (location.state as any)?.from?.pathname || "/account";
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,14 +33,25 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLoading(true);
     
     try {
-      const ok = await login(email, password);
-      if (!ok) {
+      const { success, user } = await login(email, password);
+      if (!success) {
         toast.error("Email ou mot de passe incorrect");
         return;
       }
 
       toast.success("Connexion réussie !");
-      navigate(from, { replace: true });
+
+      const fromPath = (location.state as any)?.from?.pathname as string | undefined;
+      const isAdmin = user?.role === 'admin';
+
+      let destination = '/account';
+      if (isAdmin) {
+        destination = fromPath && fromPath.startsWith('/admin') ? fromPath : '/admin';
+      } else {
+        destination = '/account';
+      }
+
+      navigate(destination, { replace: true });
     } catch (error) {
       toast.error("Email ou mot de passe incorrect");
     } finally {

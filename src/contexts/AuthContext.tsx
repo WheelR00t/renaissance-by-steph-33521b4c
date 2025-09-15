@@ -4,14 +4,14 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'client';
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   logout: () => void;
   loading: boolean;
 }
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
       // Appel API de connexion
       const response = await fetch('/api/users/login', {
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (!response.ok) {
         console.error('Erreur de connexion:', data.error);
-        return false;
+        return { success: false, error: data.error || 'Erreur de connexion' };
       }
 
       // Si connexion réussie, stocker les données utilisateur
@@ -79,17 +79,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         id: data.user.id,
         email: data.user.email,
         name: data.user.name,
-        role: data.user.role
+        role: data.user.role === 'admin' ? 'admin' : 'client'
       };
       
       setUser(user);
       localStorage.setItem('authToken', 'jwt-token'); // TODO: utiliser le vrai token JWT
       localStorage.setItem('userData', JSON.stringify(user));
-      return true;
+      return { success: true, user };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur de connexion:', error);
-      return false;
+      return { success: false, error: error?.message || 'Erreur de connexion' };
     }
   };
 
