@@ -31,8 +31,11 @@ class Database {
     if (fs.existsSync(schemaPath)) {
       const schema = fs.readFileSync(schemaPath, 'utf8');
       this.db.exec(schema, (err) => {
-        if (err) console.error('❌ Schema error:', err);
-        else {
+        if (err) {
+          console.error('❌ Schema error:', err);
+          // Même si le schema.sql a des erreurs (ex: nouvelles colonnes), continuer avec les migrations
+          this.runMigrations();
+        } else {
           console.log('✅ Schema SQLite OK');
           this.runMigrations();
         }
@@ -44,37 +47,68 @@ class Database {
 
   // Migrations légères pour mettre à niveau les bases existantes
   runMigrations() {
-    // Assurer les colonnes requises sur la table users
+    // 1) USERS: colonnes optionnelles
     this.db.all('PRAGMA table_info(users);', [], (err, rows) => {
       if (err) {
         console.error('Migration check error (users):', err);
-        // Même en cas d'erreur, tenter de seed l'admin si possible
-        this.seedAdmin();
-        return;
+        // Continuer malgré tout
       }
-      const columns = (rows || []).map((r) => r.name);
-      const statements = [];
+      const userCols = (rows || []).map((r) => r.name);
+      const userStatements = [];
+      if (!userCols.includes('phone')) userStatements.push('ALTER TABLE users ADD COLUMN phone TEXT;');
+      if (!userCols.includes('is_active')) userStatements.push('ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1;');
 
-      if (!columns.includes('phone')) {
-        statements.push('ALTER TABLE users ADD COLUMN phone TEXT;');
-      }
-      if (!columns.includes('is_active')) {
-        statements.push('ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1;');
-      }
-
-      const afterMigrations = () => {
-        this.seedAdmin();
+      const applyUser = (done) => {
+        if (userStatements.length) {
+          this.db.exec(userStatements.join('\n'), (applyErr) => {
+            if (applyErr) console.error('Migration apply error (users):', applyErr);
+            else console.log('✅ Migrations applied for users:', userStatements);
+            done();
+          });
+        } else done();
       };
 
-      if (statements.length) {
-        this.db.exec(statements.join('\n'), (applyErr) => {
-          if (applyErr) console.error('Migration apply error (users):', applyErr);
-          else console.log('✅ Migrations applied for users:', statements);
-          afterMigrations();
+      // 2) SERVICES: ajouter colonne features si manquante
+      const ensureServices = (done) => {
+        this.db.all('PRAGMA table_info(services);', [], (svcErr, svcRows) => {
+          if (svcErr) {
+            console.error('Migration check error (services):', svcErr);
+            return done();
+          }
+          const svcCols = (svcRows || []).map((r) => r.name);
+          if (!svcCols.includes('features')) {
+            this.db.exec('ALTER TABLE services ADD COLUMN features TEXT;', (alterErr) => {
+              if (alterErr) console.error('Migration apply error (services.features):', alterErr);
+              else console.log('✅ Column services.features added');
+              done();
+            });
+          } else done();
         });
-      } else {
-        afterMigrations();
-      }
+      };
+
+      // 3) BOOKINGS: ajouter colonne visio_link si manquante
+      const ensureBookings = (done) => {
+        this.db.all('PRAGMA table_info(bookings);', [], (bkErr, bkRows) => {
+          if (bkErr) {
+            console.error('Migration check error (bookings):', bkErr);
+            return done();
+          }
+          const bkCols = (bkRows || []).map((r) => r.name);
+          if (!bkCols.includes('visio_link')) {
+            this.db.exec('ALTER TABLE bookings ADD COLUMN visio_link TEXT;', (alterErr) => {
+              if (alterErr) console.error('Migration apply error (bookings.visio_link):', alterErr);
+              else console.log('✅ Column bookings.visio_link added');
+              done();
+            });
+          } else done();
+        });
+      };
+
+      // Chaînage
+      applyUser(() => ensureServices(() => ensureBookings(() => {
+        this.seedAdmin();
+        this.seedServices();
+      })));
     });
   }
 
@@ -121,7 +155,104 @@ class Database {
     });
   }
 
-  query(sql, params = []) {
+  // Seed des services par défaut avec features (idempotent)
+  seedServices() {
+    const defaults = [
+      {
+        id: 'tarot',
+        name: 'Tirage de Cartes',
+        description: "Révélez votre avenir grâce aux messages des cartes",
+        price: 45.0,
+        duration: '30-60 min',
+        features: [
+          'Lecture personnalisée',
+          "Guidance sur l'avenir",
+          'Conseils pratiques',
+          'Support émotionnel',
+        ],
+      },
+      {
+        id: 'reiki',
+        name: 'Séance Reiki',
+        description: "Harmonisez vos énergies et retrouvez l'équilibre",
+        price: 60.0,
+        duration: '45-90 min',
+        features: [
+          'Rééquilibrage énergétique',
+          'Détente profonde',
+          'Libération des blocages',
+          'Bien-être global',
+        ],
+      },
+      {
+        id: 'pendule',
+        name: 'Divination au Pendule',
+        description: 'Obtenez des réponses précises à vos questions',
+        price: 35.0,
+        duration: '30-45 min',
+        features: [
+          'Réponses précises',
+          'Art de la radiesthésie',
+          'Guidance spirituelle',
+          'Clarification des doutes',
+        ],
+      },
+      {
+        id: 'guerison',
+        name: 'Guérison Énergétique',
+        description: 'Soins énergétiques pour libérer les blocages',
+        price: 70.0,
+        duration: '60-90 min',
+        features: [
+          'Libération des blocages',
+          "Activation de l'auto-guérison",
+          'Harmonisation énergétique',
+          'Transformation profonde',
+        ],
+      },
+    ];
+
+    defaults.forEach((svc) => {
+      this.db.get('SELECT id, features FROM services WHERE id = ?', [svc.id], (err, row) => {
+        if (err) {
+          console.error('Seed services check error:', err);
+          return;
+        }
+        if (!row) {
+          const sql = `INSERT INTO services (id, name, description, price, duration, features, is_active)
+                       VALUES (?, ?, ?, ?, ?, ?, 1)`;
+          this.db.run(
+            sql,
+            [
+              svc.id,
+              svc.name,
+              svc.description,
+              svc.price,
+              svc.duration,
+              JSON.stringify(svc.features),
+            ],
+            (insErr) => {
+              if (insErr) console.error('Seed services insert error:', insErr);
+              else console.log(`✅ Service seeded: ${svc.id}`);
+            }
+          );
+        } else {
+          // Mettre les features si manquants
+          const hasFeatures = row.features && String(row.features).trim().length > 0;
+          if (!hasFeatures) {
+            this.db.run(
+              'UPDATE services SET features = ? WHERE id = ?',
+              [JSON.stringify(svc.features), svc.id],
+              (updErr) => {
+                if (updErr) console.error('Seed services update features error:', updErr);
+                else console.log(`✅ Service features set: ${svc.id}`);
+              }
+            );
+          }
+        }
+      });
+    });
+  }
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) {
