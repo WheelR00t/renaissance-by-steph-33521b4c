@@ -80,8 +80,11 @@ router.post('/confirm', async (req, res) => {
       return res.status(400).json({ error: 'paymentIntentId et bookingId requis' });
     }
 
-    // Simuler la confirmation de paiement (90% de succès)
-    const isPaymentSuccessful = Math.random() > 0.1;
+    // Simuler la confirmation de paiement (100% succès pour les tests)
+    const isPaymentSuccessful = true;
+    
+    // Version aléatoire pour la vraie production
+    // const isPaymentSuccessful = Math.random() > 0.1;
 
     if (!isPaymentSuccessful) {
       return res.status(400).json({ 

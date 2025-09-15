@@ -107,13 +107,16 @@ const PaymentFlow = ({
   const simulateStripePayment = (clientSecret: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        // 90% de chance de succès pour la démo
-        if (Math.random() > 0.1) {
-          resolve();
-        } else {
-          reject(new Error('Paiement refusé par la banque'));
-        }
-      }, 2000); // Simule un délai de traitement
+        // Force succès pour les tests
+        resolve();
+        
+        // Version aléatoire (90% de chance de succès pour la démo)
+        // if (Math.random() > 0.1) {
+        //   resolve();
+        // } else {
+        //   reject(new Error('Paiement refusé par la banque'));
+        // }
+      }, 1500); // Délai réduit pour les tests
     });
   };
 
