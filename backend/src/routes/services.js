@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
       description: s.description || '',
       price: s.price,
       duration: s.duration,
+      features: s.features ? JSON.parse(s.features) : [],
       isActive: s.is_active === 1
     }));
 
@@ -44,6 +45,7 @@ router.get('/:id', async (req, res) => {
       description: service.description || '',
       price: service.price,
       duration: service.duration,
+      features: service.features ? JSON.parse(service.features) : [],
       isActive: service.is_active === 1
     };
 
@@ -64,11 +66,12 @@ router.post('/', async (req, res) => {
     }
 
     const serviceId = req.body.id || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const featuresJson = features && Array.isArray(features) ? JSON.stringify(features) : '[]';
     
     await db.run(`
-      INSERT INTO services (id, name, description, price, duration, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [serviceId, name, description || '', price, duration || '', isActive ? 1 : 0]);
+      INSERT INTO services (id, name, description, price, duration, features, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [serviceId, name, description || '', price, duration || '', featuresJson, isActive ? 1 : 0]);
 
     const newService = await db.get('SELECT * FROM services WHERE id = ?', [serviceId]);
     
@@ -78,6 +81,7 @@ router.post('/', async (req, res) => {
       description: newService.description || '',
       price: newService.price,
       duration: newService.duration,
+      features: newService.features ? JSON.parse(newService.features) : [],
       isActive: newService.is_active === 1
     });
   } catch (error) {
@@ -101,6 +105,7 @@ router.put('/:id', async (req, res) => {
     if (typeof description !== 'undefined') { updates.push('description = ?'); params.push(description); }
     if (typeof price !== 'undefined') { updates.push('price = ?'); params.push(price); }
     if (typeof duration !== 'undefined') { updates.push('duration = ?'); params.push(duration); }
+    if (features && Array.isArray(features)) { updates.push('features = ?'); params.push(JSON.stringify(features)); }
     if (typeof isActive !== 'undefined') { updates.push('is_active = ?'); params.push(isActive ? 1 : 0); }
 
     if (updates.length === 0) {
@@ -123,6 +128,7 @@ router.put('/:id', async (req, res) => {
       description: updatedService.description || '',
       price: updatedService.price,
       duration: updatedService.duration,
+      features: updatedService.features ? JSON.parse(updatedService.features) : [],
       isActive: updatedService.is_active === 1
     });
   } catch (error) {

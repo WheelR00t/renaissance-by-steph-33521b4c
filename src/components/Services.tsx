@@ -139,7 +139,7 @@ const Services = () => {
           category: '',
           isActive: s.isActive !== false,
           image: getServiceImage(s.name),
-          features: getDefaultFeatures(s.name),
+          features: s.features && Array.isArray(s.features) ? s.features : getDefaultFeatures(s.name),
         }));
         setServices(normalized);
       } catch (e) {

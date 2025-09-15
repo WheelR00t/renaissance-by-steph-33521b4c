@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS services (
   description TEXT,
   price REAL NOT NULL,
   duration TEXT NOT NULL,
+  features TEXT, -- JSON array des caractéristiques
   is_active BOOLEAN DEFAULT true,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -69,11 +70,11 @@ CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug);
 CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
 
 -- Services par défaut
-INSERT OR IGNORE INTO services (id, name, description, price, duration) VALUES
-('tarot', 'Tirage de Cartes', 'Révélez votre avenir grâce aux messages des cartes', 45.00, '30-60 min'),
-('reiki', 'Séance Reiki', 'Harmonisez vos énergies et retrouvez l''équilibre', 60.00, '45-90 min'),
-('pendule', 'Divination au Pendule', 'Obtenez des réponses précises à vos questions', 35.00, '30-45 min'),
-('guerison', 'Guérison Énergétique', 'Soins énergétiques pour libérer les blocages', 70.00, '60-90 min');
+INSERT OR IGNORE INTO services (id, name, description, price, duration, features) VALUES
+('tarot', 'Tirage de Cartes', 'Révélez votre avenir grâce aux messages des cartes', 45.00, '30-60 min', '["Lecture personnalisée", "Guidance sur l''avenir", "Conseils pratiques", "Support émotionnel"]'),
+('reiki', 'Séance Reiki', 'Harmonisez vos énergies et retrouvez l''équilibre', 60.00, '45-90 min', '["Rééquilibrage énergétique", "Détente profonde", "Libération des blocages", "Bien-être global"]'),
+('pendule', 'Divination au Pendule', 'Obtenez des réponses précises à vos questions', 35.00, '30-45 min', '["Réponses précises", "Art de la radiesthésie", "Guidance spirituelle", "Clarification des doutes"]'),
+('guerison', 'Guérison Énergétique', 'Soins énergétiques pour libérer les blocages', 70.00, '60-90 min', '["Libération des blocages", "Activation de l''auto-guérison", "Harmonisation énergétique", "Transformation profonde"]');
 
 -- Admin par défaut (mot de passe: admin123)
 INSERT OR IGNORE INTO users (id, email, password_hash, first_name, last_name, role) VALUES
