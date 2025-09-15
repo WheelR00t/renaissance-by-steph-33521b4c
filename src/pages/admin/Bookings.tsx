@@ -66,7 +66,13 @@ const Bookings = () => {
 
   const handleUpdateVisioLink = async (id: string, link: string) => {
     try {
-      const updated = await apiService.updateBookingById(id, { visioLink: link });
+      // Formater le lien pour s'assurer qu'il a un protocole
+      let formattedLink = link.trim();
+      if (formattedLink && !formattedLink.startsWith('http://') && !formattedLink.startsWith('https://')) {
+        formattedLink = 'https://' + formattedLink;
+      }
+      
+      const updated = await apiService.updateBookingById(id, { visioLink: formattedLink });
       setBookings(prev => prev.map(b => b.id === id ? { ...b, visioLink: updated.visioLink } : b));
       toast.success("Lien visio mis à jour");
     } catch (e) {
