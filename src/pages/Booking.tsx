@@ -52,6 +52,20 @@ const Booking = () => {
     loadServices();
   }, []);
 
+  // Pré-remplir les données si l'utilisateur est connecté
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const [firstName, ...lastNameParts] = user.name.split(' ');
+      setFormData(prev => ({
+        ...prev,
+        firstName: firstName || '',
+        lastName: lastNameParts.join(' ') || '',
+        email: user.email || ''
+      }));
+      setBookingType('registered');
+    }
+  }, [isAuthenticated, user]);
+
   const loadServices = async () => {
     try {
       const servicesList = await apiService.getServices();
