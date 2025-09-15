@@ -33,6 +33,7 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/emails', require('./routes/emails'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Route de test API
 app.get('/api', (req, res) => {

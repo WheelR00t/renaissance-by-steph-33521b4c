@@ -34,50 +34,68 @@ interface RecentActivity {
   status: "success" | "warning" | "error";
 }
 
+interface TodayAppointment {
+  id: string;
+  service_id: string;
+  date: string;
+  time: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  status: string;
+  price: number;
+  service_name: string;
+  duration: string;
+}
+
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
-    todayAppointments: 3,
-    weekAppointments: 12,
-    monthRevenue: 1250,
-    pendingBookings: 5,
-    totalClients: 127,
-    avgRating: 4.8
+    todayAppointments: 0,
+    weekAppointments: 0,
+    monthRevenue: 0,
+    pendingBookings: 0,
+    totalClients: 0,
+    avgRating: 0
   });
 
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([
-    {
-      id: "1",
-      type: "booking",
-      title: "Nouvelle réservation",
-      description: "Marie Dupont - Tirage de cartes",
-      time: "Il y a 2 heures",
-      status: "success"
-    },
-    {
-      id: "2",
-      type: "payment",
-      title: "Paiement reçu",
-      description: "45€ - Consultation Reiki",
-      time: "Il y a 4 heures",
-      status: "success"
-    },
-    {
-      id: "3",
-      type: "booking",
-      title: "Réservation en attente",
-      description: "Jean Martin - Pendule",
-      time: "Il y a 6 heures",
-      status: "warning"
-    },
-    {
-      id: "4",
-      type: "review",
-      title: "Nouveau témoignage",
-      description: "5 étoiles - \"Excellente consultation\"",
-      time: "Hier",
-      status: "success"
-    }
-  ]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const baseUrl = window.location.origin;
+        
+        // Récupérer les statistiques
+        const statsResponse = await fetch(`${baseUrl}/api/dashboard/stats`);
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
+        }
+
+        // Récupérer l'activité récente
+        const activityResponse = await fetch(`${baseUrl}/api/dashboard/activity`);
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json();
+          setRecentActivity(activityData);
+        }
+
+        // Récupérer les RDV du jour
+        const appointmentsResponse = await fetch(`${baseUrl}/api/dashboard/today-appointments`);
+        if (appointmentsResponse.ok) {
+          const appointmentsData = await appointmentsResponse.json();
+          setTodayAppointments(appointmentsData);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const getActivityIcon = (type: string, status: string) => {
     switch (type) {
@@ -130,7 +148,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold text-primary">{stats.todayAppointments}</div>
             <p className="text-xs text-muted-foreground">
-              +2 depuis hier
+              Total aujourd'hui
             </p>
           </CardContent>
         </Card>
@@ -143,7 +161,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold text-primary">{stats.weekAppointments}</div>
             <p className="text-xs text-muted-foreground">
-              +15% vs semaine dernière
+              RDV cette semaine
             </p>
           </CardContent>
         </Card>
@@ -156,7 +174,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold text-primary">{stats.monthRevenue}€</div>
             <p className="text-xs text-muted-foreground">
-              +12% vs mois dernier
+              Paiements confirmés
             </p>
           </CardContent>
         </Card>
@@ -187,26 +205,38 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg bg-muted/30">
-                  <div className="flex-shrink-0">
-                    {getActivityIcon(activity.type, activity.status)}
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Chargement...</p>
+              </div>
+            ) : recentActivity.length === 0 ? (
+              <div className="text-center py-8">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucune activité récente</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg bg-muted/30">
+                    <div className="flex-shrink-0">
+                      {getActivityIcon(activity.type, activity.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">
+                        {activity.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {activity.description}
+                      </p>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {activity.time}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">
-                      {activity.title}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {activity.description}
-                    </p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {activity.time}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -258,73 +288,54 @@ const Dashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="font-bold text-primary">10:00</div>
-                  <div className="text-xs text-muted-foreground">60 min</div>
-                </div>
-                <div>
-                  <p className="font-medium">Marie Dupont</p>
-                  <p className="text-sm text-muted-foreground">Séance Reiki - 60€</p>
-                  <p className="text-xs text-muted-foreground">marie.dupont@email.com</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-green-50 text-green-700">
-                  Confirmé
-                </Badge>
-                <Button size="sm" variant="outline">
-                  Démarrer
-                </Button>
-              </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground mt-2">Chargement...</p>
             </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="font-bold text-primary">14:30</div>
-                  <div className="text-xs text-muted-foreground">45 min</div>
-                </div>
-                <div>
-                  <p className="font-medium">Jean Martin</p>
-                  <p className="text-sm text-muted-foreground">Tirage de Cartes - 45€</p>
-                  <p className="text-xs text-muted-foreground">jean.martin@email.com</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                  En attente
-                </Badge>
-                <Button size="sm" variant="outline">
-                  Confirmer
-                </Button>
-              </div>
+          ) : todayAppointments.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Aucun rendez-vous aujourd'hui</p>
             </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="font-bold text-primary">16:00</div>
-                  <div className="text-xs text-muted-foreground">30 min</div>
+          ) : (
+            <div className="space-y-4">
+              {todayAppointments.map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <div className="font-bold text-primary">{appointment.time}</div>
+                      <div className="text-xs text-muted-foreground">{appointment.duration}</div>
+                    </div>
+                    <div>
+                      <p className="font-medium">{appointment.first_name} {appointment.last_name}</p>
+                      <p className="text-sm text-muted-foreground">{appointment.service_name} - {appointment.price}€</p>
+                      <p className="text-xs text-muted-foreground">{appointment.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        appointment.status === 'confirmed' 
+                          ? "bg-green-50 text-green-700" 
+                          : appointment.status === 'pending'
+                          ? "bg-yellow-50 text-yellow-700"
+                          : "bg-gray-50 text-gray-700"
+                      }
+                    >
+                      {appointment.status === 'confirmed' ? 'Confirmé' : 
+                       appointment.status === 'pending' ? 'En attente' : 
+                       'Annulé'}
+                    </Badge>
+                    <Button size="sm" variant="outline">
+                      {appointment.status === 'pending' ? 'Confirmer' : 'Démarrer'}
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">Sophie Leroy</p>
-                  <p className="text-sm text-muted-foreground">Pendule - 35€</p>
-                  <p className="text-xs text-muted-foreground">sophie.leroy@email.com</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-green-50 text-green-700">
-                  Confirmé
-                </Badge>
-                <Button size="sm" variant="outline">
-                  Démarrer
-                </Button>
-              </div>
+              ))}
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
