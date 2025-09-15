@@ -15,6 +15,8 @@ router.post('/register', async (req, res) => {
       password
     } = req.body;
 
+    console.log('POST /api/users/register', { email, firstName, lastName });
+
     // Validation des données
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ error: 'Données manquantes' });
@@ -48,6 +50,8 @@ router.post('/register', async (req, res) => {
       FROM users WHERE id = ?
     `, [userId]);
 
+    console.log('✅ User created', newUser);
+
     res.status(201).json({
       message: 'Compte créé avec succès',
       user: newUser
@@ -70,12 +74,14 @@ router.post('/login', async (req, res) => {
 
     // Récupérer l'utilisateur
     const user = await db.get('SELECT * FROM users WHERE email = ? AND is_active = 1', [email]);
+    console.log('POST /api/users/login lookup', { email, found: !!user });
     if (!user) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
     // Vérifier le mot de passe
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('POST /api/users/login passwordCheck', { email, isValidPassword });
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }

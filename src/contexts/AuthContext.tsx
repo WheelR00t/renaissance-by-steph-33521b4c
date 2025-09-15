@@ -71,9 +71,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       let data: any = {};
       try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: raw || 'Réponse invalide du serveur' }; }
 
+      console.debug('[Auth] login response', { status: response.status, ok: response.ok, raw });
+
       if (!response.ok) {
         console.error('Erreur de connexion:', data.error);
         return { success: false, error: data.error || `Erreur ${response.status}` };
+      }
+
+      // Validation stricte de la réponse
+      if (!data || !data.user || !data.user.id || !data.user.email) {
+        console.error('[Auth] Réponse inattendue du serveur (user manquant)');
+        return { success: false, error: 'Réponse inattendue du serveur' };
       }
 
       // Si connexion réussie, stocker les données utilisateur
