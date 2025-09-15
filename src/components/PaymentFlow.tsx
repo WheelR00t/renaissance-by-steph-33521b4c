@@ -19,7 +19,9 @@ import { loadStripe } from "@stripe/stripe-js";
 import StripePaymentForm from "./StripePaymentForm";
 
 // Charger Stripe avec la clé publique
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_default');
+const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+console.log('🔑 Stripe PK loaded:', STRIPE_PK ? 'YES' : 'NO');
+const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
 
 interface PaymentFlowProps {
   booking: BookingData;
@@ -51,6 +53,8 @@ const PaymentFlow = ({
       setLoading(true);
       setError(null);
       
+      console.log('🔄 Initialisation du paiement pour booking:', booking.id);
+      
       if (!booking.id) {
         throw new Error('ID de réservation manquant');
       }
@@ -60,8 +64,10 @@ const PaymentFlow = ({
         Math.round(booking.price * 100) // Convertir en centimes
       );
       
+      console.log('✅ PaymentIntent créé:', intent);
       setPaymentIntent(intent);
     } catch (err) {
+      console.error('❌ Erreur initializePayment:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de l\'initialisation du paiement';
       setError(errorMessage);
       onPaymentError(errorMessage);
@@ -184,7 +190,7 @@ const PaymentFlow = ({
           ) : (
             <>
               {/* Stripe Elements - Interface de paiement réelle */}
-              {paymentIntent && (
+              {paymentIntent && stripePromise ? (
                 <Elements 
                   key={paymentIntent.clientSecret}
                   stripe={stripePromise} 
@@ -205,7 +211,14 @@ const PaymentFlow = ({
                     onPaymentError={onPaymentError}
                   />
                 </Elements>
-              )}
+              ) : paymentIntent && !stripePromise ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Clé Stripe manquante. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY dans .env
+                  </AlertDescription>
+                </Alert>
+              ) : null}
 
               {error && (
                 <Alert variant="destructive">
