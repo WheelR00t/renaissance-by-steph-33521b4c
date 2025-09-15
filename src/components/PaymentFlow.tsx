@@ -20,8 +20,10 @@ import StripePaymentForm from "./StripePaymentForm";
 
 // Charger Stripe avec la clé publique
 const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-console.log('🔑 Stripe PK loaded:', STRIPE_PK ? 'YES' : 'NO');
-const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null;
+const isPlaceholderPK = !!STRIPE_PK && STRIPE_PK.includes('YOUR_PUBLISHABLE_KEY_HERE');
+const displayPK = STRIPE_PK ? STRIPE_PK.slice(0, 10) + '…' : 'NONE';
+console.log('🔑 Stripe PK loaded:', STRIPE_PK ? 'YES' : 'NO', '| value:', displayPK, isPlaceholderPK ? '(placeholder detected)' : '');
+const stripePromise = STRIPE_PK && !isPlaceholderPK ? loadStripe(STRIPE_PK) : null;
 
 interface PaymentFlowProps {
   booking: BookingData;
@@ -228,7 +230,7 @@ const PaymentFlow = ({
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Clé Stripe manquante. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY dans .env
+                    Clé Stripe manquante ou invalide (placeholder). Vérifiez VITE_STRIPE_PUBLISHABLE_KEY dans .env puis rebuild (npm run build).
                   </AlertDescription>
                 </Alert>
               ) : null}
