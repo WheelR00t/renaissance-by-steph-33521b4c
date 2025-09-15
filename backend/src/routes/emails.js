@@ -56,9 +56,10 @@ router.post('/confirmation', async (req, res) => {
     </div>`;
 
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from: '"Renaissance by Steph" <contact@renaissancebysteph.fr>',
       to: booking.email,
-      subject: `Confirmation de réservation - ${booking.service_name}`,
+      subject: `✨ Confirmation de réservation - ${booking.service_name}`,
+      text: `Bonjour ${booking.first_name} ${booking.last_name},\n\nVotre réservation a été confirmée !\n\nService: ${booking.service_name}\nDate: ${booking.date}\nHeure: ${booking.time}\nPrix: ${booking.price}€\n\nÀ bientôt,\nRenaissance by Steph`,
       html: emailHtml
     });
 
