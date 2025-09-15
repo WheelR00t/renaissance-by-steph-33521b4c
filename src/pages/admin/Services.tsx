@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,57 +33,88 @@ interface Service {
   features: string[];
 }
 
+const defaultServices: Service[] = [
+  {
+    id: "1",
+    name: "Tirage de Cartes",
+    description: "Révélez votre avenir grâce aux messages des cartes de tarot et d'oracle. Une guidance claire pour éclairer votre chemin.",
+    shortDescription: "Guidance et clarté à travers la lecture des cartes de tarot et d'oracle",
+    price: 45,
+    duration: "30-60 min",
+    category: "Voyance",
+    isActive: true,
+    image: "/src/assets/service-tarot.webp",
+    features: [
+      "Lecture personnalisée",
+      "Guidance sur l'avenir",
+      "Conseils pratiques",
+      "Support émotionnel"
+    ]
+  },
+  {
+    id: "2", 
+    name: "Séance Reiki",
+    description: "Harmonisez vos énergies et retrouvez l'équilibre intérieur grâce à cette technique de guérison japonaise ancestrale.",
+    shortDescription: "Séance de guérison énergétique pour harmoniser corps et esprit",
+    price: 60,
+    duration: "45-90 min",
+    category: "Bien-être",
+    isActive: true,
+    image: "/src/assets/service-reiki.webp",
+    features: [
+      "Rééquilibrage énergétique",
+      "Détente profonde", 
+      "Libération des blocages",
+      "Bien-être global"
+    ]
+  },
+  {
+    id: "3",
+    name: "Divination au Pendule",
+    description: "Obtenez des réponses précises à vos questions grâce à la sagesse du pendule et à l'art de la radiesthésie.",
+    shortDescription: "Divination précise pour obtenir des réponses à vos questions",
+    price: 35,
+    duration: "30-45 min",
+    category: "Voyance",
+    isActive: true,
+    image: "/src/assets/service-pendulum.webp",
+    features: [
+      "Réponses précises",
+      "Art de la radiesthésie",
+      "Guidance spirituelle", 
+      "Clarification des doutes"
+    ]
+  },
+  {
+    id: "4",
+    name: "Guérison Énergétique",
+    description: "Soins énergétiques pour libérer les blocages et activer l'auto-guérison naturelle de votre être.",
+    shortDescription: "Soins énergétiques pour libérer les blocages et activer l'auto-guérison",
+    price: 70,
+    duration: "60-90 min",
+    category: "Bien-être",
+    isActive: true,
+    image: "/src/assets/service-healing.webp",
+    features: [
+      "Libération des blocages",
+      "Activation de l'auto-guérison",
+      "Harmonisation énergétique",
+      "Transformation profonde"
+    ]
+  }
+];
+
 const Services = () => {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: "1",
-      name: "Tirage de Cartes",
-      description: "Révélez votre avenir grâce aux messages des cartes de tarot et d'oracle. Une guidance claire pour éclairer votre chemin.",
-      shortDescription: "Guidance et clarté à travers la lecture des cartes de tarot et d'oracle",
-      price: 45,
-      duration: "30-60 min",
-      category: "Voyance",
-      isActive: true,
-      features: [
-        "Lecture personnalisée",
-        "Guidance sur l'avenir",
-        "Conseils pratiques",
-        "Support émotionnel"
-      ]
-    },
-    {
-      id: "2", 
-      name: "Séance Reiki",
-      description: "Harmonisez vos énergies et retrouvez l'équilibre intérieur grâce à cette technique de guérison japonaise ancestrale.",
-      shortDescription: "Séance de guérison énergétique pour harmoniser corps et esprit",
-      price: 60,
-      duration: "45-90 min",
-      category: "Bien-être",
-      isActive: true,
-      features: [
-        "Rééquilibrage énergétique",
-        "Détente profonde", 
-        "Libération des blocages",
-        "Bien-être global"
-      ]
-    },
-    {
-      id: "3",
-      name: "Divination au Pendule",
-      description: "Obtenez des réponses précises à vos questions grâce à la sagesse du pendule et à l'art de la radiesthésie.",
-      shortDescription: "Divination précise pour obtenir des réponses à vos questions",
-      price: 35,
-      duration: "30-45 min",
-      category: "Voyance",
-      isActive: true,
-      features: [
-        "Réponses précises",
-        "Art de la radiesthésie",
-        "Guidance spirituelle", 
-        "Clarification des doutes"
-      ]
-    }
-  ]);
+  // Charger les services depuis localStorage ou utiliser les services par défaut
+  const [services, setServices] = useState<Service[]>(() => {
+    const savedServices = localStorage.getItem('homePageServices');
+    return savedServices ? JSON.parse(savedServices) : defaultServices;
+  });
+
+  // Sauvegarder les services dans localStorage à chaque modification
+  useEffect(() => {
+    localStorage.setItem('homePageServices', JSON.stringify(services));
+  }, [services]);
 
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isCreating, setIsCreating] = useState(false);
