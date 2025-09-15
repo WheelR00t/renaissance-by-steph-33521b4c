@@ -34,6 +34,46 @@ app.use('/api/users', require('./routes/users')); // login/register publics
 app.use('/api/services', require('./routes/services')); // services publics pour affichage
 app.use('/api/blog', require('./routes/blog')); // blog public
 
+// Route publique pour consulter les créneaux disponibles
+app.get('/api/calendar/slots', async (req, res) => {
+  try {
+    const { date } = req.query;
+    
+    if (!date) {
+      return res.status(400).json({ error: 'Date requise' });
+    }
+
+    const db = require('./database/db');
+
+    // Créneaux de base
+    const baseSlots = [
+      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", 
+      "17:00", "17:30", "18:00", "18:30", "19:00"
+    ];
+
+    // Récupérer les créneaux déjà réservés pour cette date
+    const bookedSlots = await db.query(
+      'SELECT time FROM bookings WHERE date = ? AND status != "cancelled"',
+      [date]
+    );
+
+    const bookedTimes = bookedSlots.map(b => b.time);
+
+    // Créer la liste des créneaux avec leur disponibilité
+    const slots = baseSlots.map(time => ({
+      time,
+      available: !bookedTimes.includes(time),
+      booked: bookedTimes.includes(time)
+    }));
+
+    res.json(slots);
+  } catch (error) {
+    console.error('Erreur créneaux:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Routes API protégées (authentification requise)
 app.use('/api/calendar', authenticateToken, require('./routes/calendar'));
 app.use('/api/bookings', authenticateToken, require('./routes/bookings'));
