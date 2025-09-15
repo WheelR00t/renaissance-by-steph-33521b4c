@@ -170,7 +170,12 @@ const Services = () => {
 
       if (editingService) {
         const updated = await apiService.updateService(editingService.id, serviceData);
-        setServices(services.map(s => s.id === editingService.id ? { ...updated, features: serviceData.features } : s));
+        console.log('✅ Service mis à jour côté API:', updated);
+        
+        // Recharger tous les services pour être sûr d'avoir les dernières données
+        const refreshedServices = await apiService.getServices();
+        setServices(refreshedServices as Service[]);
+        
         toast.success("Service mis à jour avec succès");
       } else {
         const created = await apiService.createService(serviceData);

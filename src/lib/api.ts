@@ -39,6 +39,9 @@ class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    console.log('🌐 API Request:', options.method || 'GET', url);
+    console.log('📤 Request body:', options.body);
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -50,13 +53,19 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
+      console.log('📥 Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error response:', errorText);
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log('📋 Response data:', data);
+      return data;
     } catch (error) {
-      console.error('API Request failed:', error);
+      console.error('❌ API Request failed:', error);
       throw error;
     }
   }
@@ -252,10 +261,13 @@ class ApiService {
     description: string;
     isActive: boolean;
   }>> {
+    console.log('📋 Récupération de la liste des services...');
     try {
-      return await this.request<Array<any>>('/services');
+      const services = await this.request<Array<any>>('/services');
+      console.log('✅ Services récupérés:', services);
+      return services;
     } catch (error) {
-      console.warn('API non disponible, services par défaut');
+      console.warn('⚠️ API non disponible, services par défaut');
       return [
         { id: "tarot", name: "Tirage de Cartes", price: 45, duration: "30-60 min", description: "", isActive: true },
         { id: "reiki", name: "Séance Reiki", price: 60, duration: "45-90 min", description: "", isActive: true },
@@ -275,10 +287,18 @@ class ApiService {
 
   // SERVICES - Modifier un service
   async updateService(id: string, serviceData: any): Promise<any> {
-    return await this.request<any>(`/services/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(serviceData)
-    });
+    console.log('🔄 Tentative de modification du service:', id, serviceData);
+    try {
+      const result = await this.request<any>(`/services/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(serviceData)
+      });
+      console.log('✅ Service modifié avec succès:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur lors de la modification du service:', error);
+      throw error;
+    }
   }
 
   // SERVICES - Supprimer un service
