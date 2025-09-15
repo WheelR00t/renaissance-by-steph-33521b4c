@@ -186,6 +186,7 @@ const PaymentFlow = ({
               {/* Stripe Elements - Interface de paiement réelle */}
               {paymentIntent && (
                 <Elements 
+                  key={paymentIntent.clientSecret}
                   stripe={stripePromise} 
                   options={{
                     clientSecret: paymentIntent.clientSecret,

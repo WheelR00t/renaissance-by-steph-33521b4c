@@ -25,11 +25,20 @@ const StripePaymentForm = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!stripe || !elements) {
+      return;
+    }
+
+    // S'assurer que le PaymentElement est monté avant de confirmer
+    // Stripe lève l'erreur si aucun PaymentElement n'est présent dans `elements`
+    const hasPaymentElementMounted = !!document.querySelector('[data-elements-stable-field="true"], .__PrivateStripeElement, [data-payment-element]');
+    if (!hasPaymentElementMounted) {
+      setError("Le module de paiement n'est pas prêt. Patientez une seconde puis réessayez.");
       return;
     }
 
@@ -93,11 +102,12 @@ const StripePaymentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement 
-        options={{
-          layout: "tabs"
-        }}
-      />
+      <div className="p-4 border rounded-lg bg-muted/30">
+        <PaymentElement 
+          options={{ layout: "tabs" }}
+          onReady={() => setIsReady(true)}
+        />
+      </div>
       
       {error && (
         <Alert variant="destructive">
@@ -108,7 +118,7 @@ const StripePaymentForm = ({
 
       <Button 
         type="submit" 
-        disabled={!stripe || !elements || isProcessing}
+        disabled={!stripe || !elements || isProcessing || !isReady}
         className="w-full"
       >
         {isProcessing ? (
