@@ -228,25 +228,8 @@ class ApiService {
     } catch (error) {
       console.warn('API non disponible, email simulé');
       return { success: true };
+    }
   }
-
-  // ADMIN - Clients (liste)
-  async getClients(): Promise<any[]> {
-    // Utilise l'endpoint debug pour l’instant
-    const res = await this.request<{ count: number; users: any[] }>(`/users/debug-list`);
-    return res.users.map((u) => ({
-      id: u.id,
-      name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email,
-      email: u.email,
-      phone: u.phone || '',
-      dateCreated: (u.created_at || '').split('T')[0] || '',
-      totalBookings: 0,
-      lastBooking: '-',
-      status: u.is_active ? 'active' : 'inactive',
-      notes: ''
-    }));
-  }
-}
 
   async sendReminderEmail(bookingId: string): Promise<{success: boolean}> {
     try {
@@ -270,11 +253,9 @@ class ApiService {
     isActive: boolean;
   }>> {
     try {
-      // D'abord essayer l'API
       return await this.request<Array<any>>('/services');
     } catch (error) {
       console.warn('API non disponible, services par défaut');
-      // Fallback pour le développement
       return [
         { id: "tarot", name: "Tirage de Cartes", price: 45, duration: "30-60 min", description: "", isActive: true },
         { id: "reiki", name: "Séance Reiki", price: 60, duration: "45-90 min", description: "", isActive: true },
@@ -283,8 +264,27 @@ class ApiService {
       ];
     }
   }
-}
 
+  // ADMIN - Clients (liste)
+  async getClients(): Promise<any[]> {
+    try {
+      const res = await this.request<{ count: number; users: any[] }>(`/users/debug-list`);
+      return res.users.map((u) => ({
+        id: u.id,
+        name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email,
+        email: u.email,
+        phone: u.phone || '',
+        dateCreated: (u.created_at || '').split('T')[0] || '',
+        totalBookings: 0,
+        lastBooking: '-',
+        status: u.is_active ? 'active' : 'inactive',
+        notes: ''
+      }));
+    } catch (error) {
+      return [];
+    }
+  }
+}
 
 export const apiService = new ApiService();
 
