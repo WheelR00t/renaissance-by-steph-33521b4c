@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,17 +68,22 @@ const Register = () => {
         })
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: any = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: raw || 'Réponse invalide du serveur' }; }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la création du compte');
+        const message = data?.error || `Erreur ${response.status}`;
+        toast.error(message);
+        return;
       }
       
       toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
       // Redirection vers la page de connexion
-      window.location.href = "/login";
+      navigate('/login', { replace: true });
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la création du compte");
+      console.error('Erreur inscription:', error);
+      toast.error("Impossible de contacter le serveur. Vérifiez que le backend est démarré.");
     } finally {
       setLoading(false);
     }
