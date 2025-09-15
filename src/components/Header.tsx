@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Gem, Calendar, BookOpen, User } from "lucide-react";
+import { Menu, X, Gem, Calendar, BookOpen, User, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -42,12 +45,38 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">
-                <User className="h-4 w-4 mr-2" />
-                Connexion
-              </Link>
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {user?.name || user?.email || 'Mon compte'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/account">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Mon compte
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Déconnexion
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Connexion
+                </Link>
+              </Button>
+            )}
             <Button className="bg-gradient-mystique shadow-warm" asChild>
               <Link to="/reservation">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -104,12 +133,27 @@ const Header = () => {
               Contact
             </Link>
             <div className="pt-4 space-y-2">
-              <Button variant="ghost" className="w-full" asChild>
-                <Link to="/login">
-                  <User className="h-4 w-4 mr-2" />
-                  Connexion
-                </Link>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button variant="ghost" className="w-full" asChild>
+                    <Link to="/account">
+                      <User className="h-4 w-4 mr-2" />
+                      {user?.name || user?.email || 'Mon compte'}
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={logout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Déconnexion
+                  </Button>
+                </>
+              ) : (
+                <Button variant="ghost" className="w-full" asChild>
+                  <Link to="/login">
+                    <User className="h-4 w-4 mr-2" />
+                    Connexion
+                  </Link>
+                </Button>
+              )}
               <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
                 <Link to="/reservation">
                   <Calendar className="h-4 w-4 mr-2" />

@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import BookingCalendar from "@/components/BookingCalendar";
 import PaymentFlow from "@/components/PaymentFlow";
 import { apiService, BookingData } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Booking = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const Booking = () => {
   
   const [bookingType, setBookingType] = useState<"guest" | "registered" | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, user } = useAuth();
   const [currentBooking, setCurrentBooking] = useState<BookingData | null>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
@@ -185,7 +187,7 @@ const Booking = () => {
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-4xl">
             {/* Choix du type de réservation */}
-            {!isLoggedIn && (
+            {!isAuthenticated && (
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle>Comment souhaitez-vous réserver ?</CardTitle>
