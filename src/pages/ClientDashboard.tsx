@@ -51,24 +51,37 @@ const ClientDashboard = () => {
 
   const loadBookings = async () => {
     try {
-      const apiBase = window.location.origin;
       const token = localStorage.getItem('authToken');
+      console.debug('[ClientDashboard] Loading bookings. hasToken=', !!token);
       
-      const response = await fetch(`${apiBase}/api/bookings/user/my-bookings`, {
+      const response = await fetch(`/api/bookings/user/my-bookings`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json'
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setBookings(data);
-      } else {
-        toast.error('Erreur lors du chargement de vos réservations');
+      console.debug('[ClientDashboard] /my-bookings status', response.status);
+
+      if (response.status === 401) {
+        toast.info('Veuillez vous connecter pour voir vos réservations.');
+        setBookings([]);
+        return;
       }
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('[ClientDashboard] Erreur réponse /my-bookings:', text);
+        toast.error('Erreur lors du chargement de vos réservations');
+        return;
+      }
+
+      const data = await response.json();
+      console.debug('[ClientDashboard] bookings:', data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erreur chargement réservations:', error);
+      toast.error('Impossible de récupérer vos réservations');
     } finally {
       setLoading(false);
     }
