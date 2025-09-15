@@ -11,6 +11,7 @@ import BookingSummary from "./pages/BookingSummary";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Contact from "./pages/Contact";
+import PublicBlog from "./pages/Blog";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Services from "./pages/admin/Services";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<PublicBlog />} />
             
             {/* Routes Admin - Protégées */}
             <Route path="/admin" element={
