@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Download, RefreshCw, Euro, CreditCard } from "lucide-react";
+import { apiService } from "@/lib/api";
 
 interface Payment {
   id: string;
@@ -16,28 +17,20 @@ interface Payment {
 }
 
 const Payments = () => {
-  const [payments] = useState<Payment[]>([
-    {
-      id: "1",
-      clientName: "Marie Dubois",
-      service: "Consultation Tarot",
-      amount: 80,
-      status: "completed",
-      date: "2024-01-15",
-      method: "card"
-    },
-    {
-      id: "2",
-      clientName: "Pierre Martin",
-      service: "Séance de Reiki",
-      amount: 90,
-      status: "pending",
-      date: "2024-01-14",
-      method: "transfer"
-    }
-  ]);
-
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await apiService.getPaymentsList();
+        setPayments(data as Payment[]);
+      } catch (e) {
+        // silent
+      }
+    };
+    load();
+  }, []);
 
   const filteredPayments = payments.filter(payment =>
     payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,6 +52,7 @@ const Payments = () => {
 
   const totalAmount = payments.filter(p => p.status === "completed").reduce((sum, p) => sum + p.amount, 0);
   const pendingAmount = payments.filter(p => p.status === "pending").reduce((sum, p) => sum + p.amount, 0);
+  const average = payments.length ? Math.round(totalAmount / payments.length) : 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -106,7 +100,7 @@ const Payments = () => {
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(totalAmount / payments.length)}€</div>
+            <div className="text-2xl font-bold">{average}€</div>
             <p className="text-xs text-muted-foreground">par consultation</p>
           </CardContent>
         </Card>

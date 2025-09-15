@@ -202,4 +202,142 @@ router.put('/:token', async (req, res) => {
   }
 });
 
+
+// GET /api/bookings - Liste des réservations (pour l'admin)
+router.get('/', async (req, res) => {
+  try {
+    const rows = await db.query(`
+      SELECT b.*, s.name as service_name
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      ORDER BY b.created_at DESC
+    `);
+
+    const list = rows.map((b) => ({
+      id: b.id,
+      clientName: `${b.first_name} ${b.last_name}`.trim(),
+      clientEmail: b.email,
+      service: b.service_name || b.service_id,
+      date: b.date,
+      time: b.time,
+      status: b.status,
+      price: b.price,
+      notes: '',
+      visioLink: b.visio_link || '',
+      bookingType: b.booking_type,
+      paymentStatus: b.payment_status,
+      createdAt: b.created_at,
+    }));
+
+    res.json(list);
+  } catch (error) {
+    console.error('Erreur liste réservations:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET /api/bookings/token/:token - Récupérer par token (alias compatible frontend)
+router.get('/token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const booking = await db.get(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration
+      FROM bookings b
+      JOIN services s ON b.service_id = s.id
+      WHERE b.confirmation_token = ?
+    `, [token]);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    res.json({
+      id: booking.id,
+      service: booking.service_name,
+      date: booking.date,
+      time: booking.time,
+      firstName: booking.first_name,
+      lastName: booking.last_name,
+      email: booking.email,
+      phone: booking.phone,
+      address: booking.address,
+      message: booking.message,
+      bookingType: booking.booking_type,
+      status: booking.status,
+      paymentStatus: booking.payment_status,
+      price: booking.price,
+      createdAt: booking.created_at,
+      confirmationToken: booking.confirmation_token
+    });
+  } catch (error) {
+    console.error('Erreur récupération réservation (token):', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// PUT /api/bookings/id/:id - Mise à jour par ID (admin)
+router.put('/id/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, paymentStatus, visioLink } = req.body;
+
+    const updates = [];
+    const params = [];
+
+    if (status) { updates.push('status = ?'); params.push(status); }
+    if (paymentStatus) { updates.push('payment_status = ?'); params.push(paymentStatus); }
+    if (typeof visioLink !== 'undefined') { updates.push('visio_link = ?'); params.push(visioLink || null); }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Aucune mise à jour fournie' });
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    await db.run(`
+      UPDATE bookings SET ${updates.join(', ')} WHERE id = ?
+    `, params);
+
+    const updated = await db.get(`
+      SELECT b.*, s.name as service_name
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      WHERE b.id = ?
+    `, [id]);
+
+    res.json({
+      id: updated.id,
+      clientName: `${updated.first_name} ${updated.last_name}`.trim(),
+      clientEmail: updated.email,
+      service: updated.service_name || updated.service_id,
+      date: updated.date,
+      time: updated.time,
+      status: updated.status,
+      price: updated.price,
+      notes: '',
+      visioLink: updated.visio_link || '',
+      bookingType: updated.booking_type,
+      paymentStatus: updated.payment_status,
+      createdAt: updated.created_at,
+    });
+  } catch (error) {
+    console.error('Erreur update réservation (id):', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// DELETE /api/bookings/id/:id - Suppression (admin)
+router.delete('/id/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.run('DELETE FROM bookings WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur suppression réservation:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

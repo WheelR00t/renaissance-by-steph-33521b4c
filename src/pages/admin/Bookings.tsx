@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { apiService } from "@/lib/api";
 
 interface Booking {
   id: string;
@@ -17,7 +18,7 @@ interface Booking {
   service: string;
   date: string;
   time: string;
-  status: "confirmed" | "pending" | "cancelled" | "completed";
+  status: "confirmed" | "pending" | "cancelled";
   price: number;
   notes: string;
   visioLink?: string;
@@ -25,33 +26,19 @@ interface Booking {
 }
 
 const Bookings = () => {
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: "1",
-      clientName: "Marie Dubois",
-      clientEmail: "marie.dubois@email.com",
-      service: "Consultation Tarot",
-      date: "2024-01-20",
-      time: "14:00",
-      status: "confirmed",
-      price: 80,
-      notes: "Première consultation",
-      visioLink: "https://meet.google.com/abc-defg-hij",
-      bookingType: "registered"
-    },
-    {
-      id: "2", 
-      clientName: "Pierre Martin",
-      clientEmail: "p.martin@email.com",
-      service: "Séance de Reiki",
-      date: "2024-01-22",
-      time: "16:30",
-      status: "pending",
-      price: 90,
-      notes: "",
-      bookingType: "guest"
-    }
-  ]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await apiService.getAdminBookings();
+        setBookings(data as Booking[]);
+      } catch (e) {
+        toast.error("Impossible de charger les réservations");
+      }
+    };
+    load();
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -67,23 +54,34 @@ const Bookings = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleUpdateStatus = (id: string, newStatus: Booking["status"]) => {
-    setBookings(prev => prev.map(booking =>
-      booking.id === id ? { ...booking, status: newStatus } : booking
-    ));
-    toast.success("Statut mis à jour");
+  const handleUpdateStatus = async (id: string, newStatus: Booking["status"]) => {
+    try {
+      const updated = await apiService.updateBookingById(id, { status: newStatus });
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: updated.status } : b));
+      toast.success("Statut mis à jour");
+    } catch (e) {
+      toast.error("Échec de la mise à jour du statut");
+    }
   };
 
-  const handleUpdateVisioLink = (id: string, link: string) => {
-    setBookings(prev => prev.map(booking =>
-      booking.id === id ? { ...booking, visioLink: link } : booking
-    ));
-    toast.success("Lien visio ajouté");
+  const handleUpdateVisioLink = async (id: string, link: string) => {
+    try {
+      const updated = await apiService.updateBookingById(id, { visioLink: link });
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, visioLink: updated.visioLink } : b));
+      toast.success("Lien visio mis à jour");
+    } catch (e) {
+      toast.error("Échec de la mise à jour du lien visio");
+    }
   };
 
-  const handleDeleteBooking = (id: string) => {
-    setBookings(prev => prev.filter(booking => booking.id !== id));
-    toast.success("Réservation supprimée");
+  const handleDeleteBooking = async (id: string) => {
+    try {
+      await apiService.deleteBookingById(id);
+      setBookings(prev => prev.filter(booking => booking.id !== id));
+      toast.success("Réservation supprimée");
+    } catch (e) {
+      toast.error("Échec de la suppression");
+    }
   };
 
   const getStatusBadge = (status: Booking["status"]) => {
@@ -94,8 +92,6 @@ const Bookings = () => {
         return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
       case "cancelled":
         return <Badge variant="destructive">Annulé</Badge>;
-      case "completed":
-        return <Badge variant="secondary">Terminé</Badge>;
     }
   };
 
@@ -198,7 +194,6 @@ const Bookings = () => {
                   <SelectContent>
                     <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="confirmed">Confirmé</SelectItem>
-                    <SelectItem value="completed">Terminé</SelectItem>
                     <SelectItem value="cancelled">Annulé</SelectItem>
                   </SelectContent>
                 </Select>

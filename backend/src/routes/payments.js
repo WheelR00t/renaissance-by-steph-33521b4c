@@ -3,6 +3,34 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
 
+// GET /api/payments/list - Liste des paiements (à partir des réservations)
+router.get('/list', async (req, res) => {
+  try {
+    const rows = await db.query(`
+      SELECT b.*, s.name as service_name
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      ORDER BY b.created_at DESC
+    `);
+
+    const list = rows.map((b) => ({
+      id: b.id,
+      clientName: `${b.first_name} ${b.last_name}`.trim(),
+      service: b.service_name || b.service_id,
+      amount: b.price,
+      status: b.payment_status === 'paid' ? 'completed' : (b.payment_status === 'failed' ? 'failed' : 'pending'),
+      date: b.created_at?.split('T')[0] || b.date,
+      method: 'card'
+    }));
+
+    res.json(list);
+  } catch (error) {
+    console.error('Erreur liste paiements:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
 // POST /api/payments/create-intent - Créer une intention de paiement
 router.post('/create-intent', async (req, res) => {
   try {

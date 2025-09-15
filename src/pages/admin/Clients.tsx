@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, UserPlus, Edit, Trash2, Calendar, Mail, Phone } from "lucide-react";
+import { apiService } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Client {
@@ -22,30 +23,7 @@ interface Client {
 }
 
 const Clients = () => {
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: "1",
-      name: "Marie Dubois",
-      email: "marie.dubois@email.com", 
-      phone: "06 12 34 56 78",
-      dateCreated: "2024-01-10",
-      totalBookings: 3,
-      lastBooking: "2024-01-15",
-      status: "active",
-      notes: "Cliente fidèle, préfère les consultations de tarot"
-    },
-    {
-      id: "2",
-      name: "Pierre Martin",
-      email: "p.martin@email.com",
-      phone: "06 98 76 54 32", 
-      dateCreated: "2023-12-20",
-      totalBookings: 1,
-      lastBooking: "2024-01-08",
-      status: "active",
-      notes: "Première consultation très positive"
-    }
-  ]);
+  const [clients, setClients] = useState<Client[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -56,6 +34,18 @@ const Clients = () => {
     phone: "",
     notes: ""
   });
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await apiService.getClients();
+        setClients(data as Client[]);
+      } catch (e) {
+        // silent
+      }
+    };
+    load();
+  }, []);
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

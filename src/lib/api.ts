@@ -193,6 +193,31 @@ class ApiService {
     }
   }
 
+  // ADMIN - Réservations (liste)
+  async getAdminBookings(): Promise<any[]> {
+    return await this.request<any[]>('/bookings');
+  }
+
+  // ADMIN - Mettre à jour une réservation par ID
+  async updateBookingById(id: string, payload: Partial<{ status: string; paymentStatus: string; visioLink: string }>): Promise<any> {
+    return await this.request<any>(`/bookings/id/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // ADMIN - Supprimer une réservation par ID
+  async deleteBookingById(id: string): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>(`/bookings/id/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // ADMIN - Paiements (liste)
+  async getPaymentsList(): Promise<any[]> {
+    return await this.request<any[]>('/payments/list');
+  }
+
   // EMAILS - Déclencher l'envoi d'emails (confirmation, rappel)
   async sendConfirmationEmail(bookingId: string): Promise<{success: boolean}> {
     try {
@@ -203,8 +228,25 @@ class ApiService {
     } catch (error) {
       console.warn('API non disponible, email simulé');
       return { success: true };
-    }
   }
+
+  // ADMIN - Clients (liste)
+  async getClients(): Promise<any[]> {
+    // Utilise l'endpoint debug pour l’instant
+    const res = await this.request<{ count: number; users: any[] }>(`/users/debug-list`);
+    return res.users.map((u) => ({
+      id: u.id,
+      name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email,
+      email: u.email,
+      phone: u.phone || '',
+      dateCreated: (u.created_at || '').split('T')[0] || '',
+      totalBookings: 0,
+      lastBooking: '-',
+      status: u.is_active ? 'active' : 'inactive',
+      notes: ''
+    }));
+  }
+}
 
   async sendReminderEmail(bookingId: string): Promise<{success: boolean}> {
     try {
@@ -228,16 +270,7 @@ class ApiService {
     isActive: boolean;
   }>> {
     try {
-      // D'abord essayer localStorage (synchronisé avec admin)
-      const saved = localStorage.getItem('homePageServices');
-      if (saved) {
-        const services = JSON.parse(saved).filter((s: any) => s.isActive);
-        if (services.length > 0) {
-          return services;
-        }
-      }
-
-      // Sinon essayer l'API (sera disponible après déploiement backend)
+      // D'abord essayer l'API
       return await this.request<Array<any>>('/services');
     } catch (error) {
       console.warn('API non disponible, services par défaut');
@@ -252,6 +285,7 @@ class ApiService {
   }
 }
 
+
 export const apiService = new ApiService();
 
 // Helpers pour votre backend
@@ -262,12 +296,14 @@ export const API_ENDPOINTS = {
   // Réservations  
   CREATE_BOOKING: '/bookings',
   GET_BOOKING_BY_TOKEN: '/bookings/token/{token}',
-  UPDATE_BOOKING: '/bookings/{id}',
-  DELETE_BOOKING: '/bookings/{id}',
+  UPDATE_BOOKING: '/bookings/id/{id}',
+  DELETE_BOOKING: '/bookings/id/{id}',
+  LIST_BOOKINGS: '/bookings',
   
   // Paiements
   CREATE_PAYMENT_INTENT: '/payments/create-intent',
   CONFIRM_PAYMENT: '/payments/confirm',
+  LIST_PAYMENTS: '/payments/list',
   
   // Emails
   SEND_CONFIRMATION: '/emails/confirmation',

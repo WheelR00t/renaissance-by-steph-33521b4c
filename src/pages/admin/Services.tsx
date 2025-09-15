@@ -19,6 +19,7 @@ import {
   EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiService } from "@/lib/api";
 
 interface Service {
   id: string;
@@ -105,16 +106,21 @@ const defaultServices: Service[] = [
 ];
 
 const Services = () => {
-  // Charger les services depuis localStorage ou utiliser les services par défaut
-  const [services, setServices] = useState<Service[]>(() => {
-    const savedServices = localStorage.getItem('homePageServices');
-    return savedServices ? JSON.parse(savedServices) : defaultServices;
-  });
+  // Charger les services depuis l'API
+  const [services, setServices] = useState<Service[]>([]);
 
-  // Sauvegarder les services dans localStorage à chaque modification
   useEffect(() => {
-    localStorage.setItem('homePageServices', JSON.stringify(services));
-  }, [services]);
+    const load = async () => {
+      try {
+        const list = await apiService.getServices();
+        setServices(list as Service[]);
+      } catch (e) {
+        // fallback local
+        setServices(defaultServices);
+      }
+    };
+    load();
+  }, []);
 
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isCreating, setIsCreating] = useState(false);
