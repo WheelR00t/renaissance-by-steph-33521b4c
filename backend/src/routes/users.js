@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
+const { generateToken } = require('../middleware/auth');
 
 // Debug logging for all users routes
 router.use((req, res, next) => {
@@ -97,6 +98,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
+    // Générer un token JWT
+    const token = generateToken(user.id);
+
     // Retourner les infos utilisateur (sans le mot de passe)
     const userInfo = {
       id: user.id,
@@ -107,7 +111,8 @@ router.post('/login', async (req, res) => {
 
     res.json({
       message: 'Connexion réussie',
-      user: userInfo
+      user: userInfo,
+      token: token
     });
 
   } catch (error) {

@@ -3,6 +3,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const db = require('../database/db');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 // POST /api/bookings - Créer une nouvelle réservation
 router.post('/', async (req, res) => {
@@ -133,8 +134,8 @@ router.get('/:token', async (req, res) => {
   }
 });
 
-// PUT /api/bookings/:token - Mettre à jour une réservation
-router.put('/:token', async (req, res) => {
+// PUT /api/bookings/:token - Mettre à jour une réservation (ADMIN SEULEMENT)
+router.put('/:token', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { token } = req.params;
     const { status, paymentStatus, visioLink } = req.body;
@@ -203,8 +204,8 @@ router.put('/:token', async (req, res) => {
 });
 
 
-// GET /api/bookings - Liste des réservations (pour l'admin)
-router.get('/', async (req, res) => {
+// GET /api/bookings - Liste des réservations (ADMIN SEULEMENT)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const rows = await db.query(`
       SELECT b.*, s.name as service_name
@@ -276,8 +277,8 @@ router.get('/token/:token', async (req, res) => {
   }
 });
 
-// PUT /api/bookings/id/:id - Mise à jour par ID (admin)
-router.put('/id/:id', async (req, res) => {
+// PUT /api/bookings/id/:id - Mise à jour par ID (ADMIN SEULEMENT)
+router.put('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, paymentStatus, visioLink } = req.body;
@@ -328,8 +329,8 @@ router.put('/id/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/bookings/id/:id - Suppression (admin)
-router.delete('/id/:id', async (req, res) => {
+// DELETE /api/bookings/id/:id - Suppression (ADMIN SEULEMENT)
+router.delete('/id/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await db.run('DELETE FROM bookings WHERE id = ?', [id]);

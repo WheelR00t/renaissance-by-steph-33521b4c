@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const { v4: uuidv4 } = require('uuid');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 // GET /api/blog - Récupérer tous les articles publiés (public)
 router.get('/', async (req, res) => {
@@ -48,7 +49,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/blog/admin - Récupérer tous les articles (admin)
-router.get('/admin', async (req, res) => {
+router.get('/admin', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
     
@@ -129,7 +130,7 @@ router.get('/:slug', async (req, res) => {
 });
 
 // POST /api/blog - Créer un nouvel article
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { title, content, excerpt, imageUrl, status = 'draft' } = req.body;
     
@@ -192,7 +193,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/blog/:id - Modifier un article
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, excerpt, imageUrl, status } = req.body;
@@ -282,7 +283,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/blog/:id - Supprimer un article
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     

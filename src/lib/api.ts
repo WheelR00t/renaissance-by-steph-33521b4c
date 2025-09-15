@@ -42,11 +42,19 @@ class ApiService {
     console.log('🌐 API Request:', options.method || 'GET', url);
     console.log('📤 Request body:', options.body);
     
+    // Ajouter le token JWT aux headers si disponible
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+    
+    if (token && token !== 'jwt-token') { // Ignorer l'ancien placeholder
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     };
 

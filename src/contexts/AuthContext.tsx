@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       };
       
       setUser(user);
-      localStorage.setItem('authToken', 'jwt-token'); // TODO: utiliser le vrai token JWT
+      localStorage.setItem('authToken', data.token); // Stocker le vrai token JWT
       localStorage.setItem('userData', JSON.stringify(user));
       return { success: true, user };
       

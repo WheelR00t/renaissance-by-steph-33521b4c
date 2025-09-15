@@ -26,15 +26,22 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Routes API
-app.use('/api/services', require('./routes/services'));
-app.use('/api/calendar', require('./routes/calendar'));
-app.use('/api/bookings', require('./routes/bookings'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/payments', require('./routes/payments'));
-app.use('/api/emails', require('./routes/emails'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/blog', require('./routes/blog'));
+// Middleware d'authentification
+const { authenticateToken, requireAdmin } = require('./middleware/auth');
+
+// Routes API publiques (pas de protection)
+app.use('/api/users', require('./routes/users')); // login/register publics
+app.use('/api/services', require('./routes/services')); // services publics pour affichage
+app.use('/api/blog', require('./routes/blog')); // blog public
+
+// Routes API protégées (authentification requise)
+app.use('/api/calendar', authenticateToken, require('./routes/calendar'));
+app.use('/api/bookings', authenticateToken, require('./routes/bookings'));
+app.use('/api/payments', authenticateToken, require('./routes/payments'));
+app.use('/api/emails', authenticateToken, require('./routes/emails'));
+
+// Routes API admin (authentification + rôle admin requis)
+app.use('/api/dashboard', authenticateToken, requireAdmin, require('./routes/dashboard'));
 
 // Route de test API
 app.get('/api', (req, res) => {

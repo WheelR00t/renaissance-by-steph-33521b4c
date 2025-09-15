@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 // GET /api/services - Récupérer tous les services actifs
 router.get('/', async (req, res) => {
@@ -56,8 +57,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/services - Créer un nouveau service
-router.post('/', async (req, res) => {
+// POST /api/services - Créer un nouveau service (ADMIN SEULEMENT)
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, description, shortDescription, price, duration, category, isActive, features } = req.body;
 
@@ -90,8 +91,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/services/:id - Modifier un service
-router.put('/:id', async (req, res) => {
+// PUT /api/services/:id - Modifier un service (ADMIN SEULEMENT)
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     console.log('PUT /api/services/:id - ID:', id);
@@ -137,8 +138,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/services/:id - Supprimer un service
-router.delete('/:id', async (req, res) => {
+// DELETE /api/services/:id - Supprimer un service (ADMIN SEULEMENT)
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
