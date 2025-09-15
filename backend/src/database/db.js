@@ -47,6 +47,8 @@ class Database {
     this.db.all('PRAGMA table_info(users);', [], (err, rows) => {
       if (err) {
         console.error('Migration check error (users):', err);
+        // Même en cas d'erreur, tenter de seed l'admin si possible
+        this.seedAdmin();
         return;
       }
       const columns = (rows || []).map((r) => r.name);
@@ -59,12 +61,47 @@ class Database {
         statements.push('ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1;');
       }
 
+      const afterMigrations = () => {
+        this.seedAdmin();
+      };
+
       if (statements.length) {
         this.db.exec(statements.join('\n'), (applyErr) => {
           if (applyErr) console.error('Migration apply error (users):', applyErr);
           else console.log('✅ Migrations applied for users:', statements);
+          afterMigrations();
         });
+      } else {
+        afterMigrations();
       }
+    });
+  }
+
+  // Seed de l'admin (idempotent)
+  seedAdmin() {
+    const email = 'admin@renaissancebysteph.fr';
+    const hashedPassword = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8R8.lR1BQrQ9/WuCJWs3f5j6s9Y5OG'; // admin123
+
+    this.db.get('SELECT id FROM users WHERE email = ?', [email], (err, row) => {
+      if (err) {
+        console.error('Admin seed check error:', err);
+        return;
+      }
+      if (row) {
+        console.log('ℹ️ Admin already present');
+        return;
+      }
+      const sql = `
+        INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active)
+        VALUES ('admin-1', ?, ?, 'Stéphanie', 'Admin', 'admin', 1)
+      `;
+      this.db.run(sql, [email, hashedPassword], (insertErr) => {
+        if (insertErr) {
+          console.error('Admin seed insert error:', insertErr);
+        } else {
+          console.log('✅ Admin seeded successfully');
+        }
+      });
     });
   }
 

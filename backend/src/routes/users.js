@@ -153,31 +153,5 @@ router.get('/debug-count', async (req, res) => {
   }
 });
 
-// Créer l'admin par défaut s'il n'existe pas  
-router.post('/create-admin', async (req, res) => {
-  try {
-    // Vérifier si l'admin existe déjà
-    const existingAdmin = await db.get('SELECT * FROM users WHERE email = ?', ['admin@renaissancebysteph.fr']);
-    
-    if (existingAdmin) {
-      return res.json({ message: 'Admin existe déjà', admin: { email: existingAdmin.email, role: existingAdmin.role } });
-    }
-
-    // Créer l'admin avec le mot de passe hashé (admin123)
-    const hashedPassword = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8R8.lR1BQrQ9/WuCJWs3f5j6s9Y5OG';
-    
-    await db.run(`
-      INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active) 
-      VALUES ('admin-1', 'admin@renaissancebysteph.fr', ?, 'Stéphanie', 'Admin', 'admin', 1)
-    `, [hashedPassword]);
-
-    console.log('✅ Admin créé avec succès');
-    res.json({ message: 'Admin créé avec succès', email: 'admin@renaissancebysteph.fr' });
-
-  } catch (error) {
-    console.error('Erreur création admin:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error?.message });
-  }
-});
 
 module.exports = router;
