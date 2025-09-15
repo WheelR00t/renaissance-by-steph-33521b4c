@@ -77,31 +77,46 @@ class Database {
     });
   }
 
-  // Seed de l'admin (idempotent)
+  // Seed de l'admin (idempotent et sans conflit)
   seedAdmin() {
+    const desiredId = 'admin-1';
     const email = 'admin@renaissancebysteph.fr';
     const hashedPassword = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8R8.lR1BQrQ9/WuCJWs3f5j6s9Y5OG'; // admin123
 
-    this.db.get('SELECT id FROM users WHERE email = ?', [email], (err, row) => {
+    // Si un enregistrement existe déjà avec le même id OU le même email, on met à jour, sinon on insère
+    this.db.get('SELECT id, email FROM users WHERE id = ? OR email = ?', [desiredId, email], (err, row) => {
       if (err) {
         console.error('Admin seed check error:', err);
         return;
       }
+
       if (row) {
-        console.log('ℹ️ Admin already present');
-        return;
+        const idToUpdate = row.id || desiredId;
+        const updateSql = `
+          UPDATE users
+          SET email = ?, password_hash = ?, first_name = 'Stéphanie', last_name = 'Admin', role = 'admin', is_active = 1
+          WHERE id = ?
+        `;
+        this.db.run(updateSql, [email, hashedPassword, idToUpdate], (updErr) => {
+          if (updErr) {
+            console.error('Admin seed update error:', updErr);
+          } else {
+            console.log('✅ Admin record updated/normalized');
+          }
+        });
+      } else {
+        const insertSql = `
+          INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active)
+          VALUES (?, ?, ?, 'Stéphanie', 'Admin', 'admin', 1)
+        `;
+        this.db.run(insertSql, [desiredId, email, hashedPassword], (insErr) => {
+          if (insErr) {
+            console.error('Admin seed insert error:', insErr);
+          } else {
+            console.log('✅ Admin seeded successfully');
+          }
+        });
       }
-      const sql = `
-        INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active)
-        VALUES ('admin-1', ?, ?, 'Stéphanie', 'Admin', 'admin', 1)
-      `;
-      this.db.run(sql, [email, hashedPassword], (insertErr) => {
-        if (insertErr) {
-          console.error('Admin seed insert error:', insertErr);
-        } else {
-          console.log('✅ Admin seeded successfully');
-        }
-      });
     });
   }
 
