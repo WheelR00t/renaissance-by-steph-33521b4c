@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,41 +61,43 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const appointmentsRef = useRef<HTMLDivElement>(null);
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const baseUrl = window.location.origin;
+      
+      // Récupérer les statistiques
+      const statsResponse = await fetch(`${baseUrl}/api/dashboard/stats`);
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData);
+      }
+
+      // Récupérer l'activité récente
+      const activityResponse = await fetch(`${baseUrl}/api/dashboard/activity`);
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json();
+        setRecentActivity(activityData);
+      }
+
+      // Récupérer les RDV du jour
+      const appointmentsResponse = await fetch(`${baseUrl}/api/dashboard/today-appointments`);
+      if (appointmentsResponse.ok) {
+        const appointmentsData = await appointmentsResponse.json();
+        setTodayAppointments(appointmentsData);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const baseUrl = window.location.origin;
-        
-        // Récupérer les statistiques
-        const statsResponse = await fetch(`${baseUrl}/api/dashboard/stats`);
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          setStats(statsData);
-        }
-
-        // Récupérer l'activité récente
-        const activityResponse = await fetch(`${baseUrl}/api/dashboard/activity`);
-        if (activityResponse.ok) {
-          const activityData = await activityResponse.json();
-          setRecentActivity(activityData);
-        }
-
-        // Récupérer les RDV du jour
-        const appointmentsResponse = await fetch(`${baseUrl}/api/dashboard/today-appointments`);
-        if (appointmentsResponse.ok) {
-          const appointmentsData = await appointmentsResponse.json();
-          setTodayAppointments(appointmentsData);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement du dashboard:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   const getActivityIcon = (type: string, status: string) => {
     switch (type) {
@@ -131,9 +133,12 @@ const Dashboard = () => {
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             En ligne
           </Badge>
-          <Button className="bg-gradient-mystique">
+          <Button className="bg-gradient-mystique" onClick={() => appointmentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
             <Calendar className="h-4 w-4 mr-2" />
             Voir les RDV du jour
+          </Button>
+          <Button variant="outline" onClick={fetchDashboardData}>
+            Actualiser
           </Button>
         </div>
       </div>
