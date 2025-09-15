@@ -102,24 +102,6 @@ const BlogPost = () => {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/40"></div>
-            {/* Titre sur l'image */}
-            <div className="absolute inset-x-0 bottom-0">
-              <div className="bg-gradient-to-t from-black/70 to-transparent pt-16 pb-6">
-                <div className="container mx-auto max-w-4xl px-4">
-                  <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">{article.title}</h1>
-                  <div className="flex items-center gap-6 text-white/80">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{article.author}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </section>
         )}
         
@@ -134,24 +116,7 @@ const BlogPost = () => {
               </Button>
             </nav>
             
-            {!article.imageUrl && (
-              <div className="text-center text-foreground mb-8">
-                <h1 className="text-3xl md:text-5xl font-bold mb-6">
-                  {article.title}
-                </h1>
-                
-                <div className="flex items-center justify-center gap-6 text-muted-foreground mb-6">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{article.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Titre et métadonnées toujours visibles dans le contenu */}
           </div>
         </section>
 
@@ -159,6 +124,19 @@ const BlogPost = () => {
           <div className="container mx-auto max-w-4xl">
             <Card className="shadow-xl">
               <CardContent className="p-8 md:p-12">
+                <header className="mb-8 text-center">
+                  <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">{article.title}</h1>
+                  <div className="flex items-center justify-center gap-6 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>{article.author}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                </header>
                 <div className="prose prose-lg max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
                 </div>
