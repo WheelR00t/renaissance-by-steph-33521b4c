@@ -38,8 +38,8 @@ const menuItems = [
     group: "main"
   },
   {
-    title: "Rendez-vous",
-    url: "/admin/appointments",
+    title: "Réservations",
+    url: "/admin/bookings",
     icon: Calendar,
     group: "business"
   },

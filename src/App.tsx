@@ -13,6 +13,9 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Services from "./pages/admin/Services";
 import Schedule from "./pages/admin/Schedule";
+import Bookings from "./pages/admin/Bookings";
+import Clients from "./pages/admin/Clients";
+import Messages from "./pages/admin/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,9 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="services" element={<Services />} />
             <Route path="schedule" element={<Schedule />} />
+            <Route path="bookings" element={<Bookings />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="messages" element={<Messages />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

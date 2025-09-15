@@ -57,9 +57,9 @@ const Footer = () => {
             © 2024 Renaissance By Steph. Tous droits réservés.
           </p>
           <p className="text-background/60 flex items-center space-x-1 mt-4 md:mt-0">
-            <span>Créé avec</span>
+            <span>Site développé avec</span>
             <Heart className="h-4 w-4 text-primary" />
-            <span>par Lovable</span>
+            <span>passion</span>
           </p>
         </div>
       </div>

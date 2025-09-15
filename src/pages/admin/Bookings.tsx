@@ -1,0 +1,303 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Calendar, Clock, User, Edit, Trash2, Video, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+
+interface Booking {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  service: string;
+  date: string;
+  time: string;
+  status: "confirmed" | "pending" | "cancelled" | "completed";
+  price: number;
+  notes: string;
+  visioLink?: string;
+  bookingType: "guest" | "registered";
+}
+
+const Bookings = () => {
+  const [bookings, setBookings] = useState<Booking[]>([
+    {
+      id: "1",
+      clientName: "Marie Dubois",
+      clientEmail: "marie.dubois@email.com",
+      service: "Consultation Tarot",
+      date: "2024-01-20",
+      time: "14:00",
+      status: "confirmed",
+      price: 80,
+      notes: "Première consultation",
+      visioLink: "https://meet.google.com/abc-defg-hij",
+      bookingType: "registered"
+    },
+    {
+      id: "2", 
+      clientName: "Pierre Martin",
+      clientEmail: "p.martin@email.com",
+      service: "Séance de Reiki",
+      date: "2024-01-22",
+      time: "16:30",
+      status: "pending",
+      price: 90,
+      notes: "",
+      bookingType: "guest"
+    }
+  ]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const filteredBookings = bookings.filter(booking => {
+    const matchesSearch = booking.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.clientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.service.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleUpdateStatus = (id: string, newStatus: Booking["status"]) => {
+    setBookings(prev => prev.map(booking =>
+      booking.id === id ? { ...booking, status: newStatus } : booking
+    ));
+    toast.success("Statut mis à jour");
+  };
+
+  const handleUpdateVisioLink = (id: string, link: string) => {
+    setBookings(prev => prev.map(booking =>
+      booking.id === id ? { ...booking, visioLink: link } : booking
+    ));
+    toast.success("Lien visio ajouté");
+  };
+
+  const handleDeleteBooking = (id: string) => {
+    setBookings(prev => prev.filter(booking => booking.id !== id));
+    toast.success("Réservation supprimée");
+  };
+
+  const getStatusBadge = (status: Booking["status"]) => {
+    switch (status) {
+      case "confirmed":
+        return <Badge className="bg-green-100 text-green-800">Confirmé</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Annulé</Badge>;
+      case "completed":
+        return <Badge variant="secondary">Terminé</Badge>;
+    }
+  };
+
+  const getBookingTypeBadge = (type: Booking["bookingType"]) => {
+    return type === "registered" ? 
+      <Badge variant="outline">Compte client</Badge> :
+      <Badge variant="outline" className="bg-blue-50 text-blue-700">Invité</Badge>;
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Réservations</h1>
+          <p className="text-muted-foreground">Gestion de toutes les réservations</p>
+        </div>
+      </div>
+
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher une réservation..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrer par statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="confirmed">Confirmé</SelectItem>
+            <SelectItem value="completed">Terminé</SelectItem>
+            <SelectItem value="cancelled">Annulé</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-4">
+        {filteredBookings.map((booking) => (
+          <Card key={booking.id}>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">{booking.clientName}</CardTitle>
+                    {getBookingTypeBadge(booking.bookingType)}
+                  </div>
+                  <CardDescription>{booking.clientEmail}</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(booking.status)}
+                  <span className="text-sm font-medium">{booking.price}€</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{booking.service}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{booking.date}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>{booking.time}</span>
+                </div>
+              </div>
+
+              {booking.notes && (
+                <p className="text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+                  <strong>Notes:</strong> {booking.notes}
+                </p>
+              )}
+
+              {booking.visioLink && (
+                <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded">
+                  <Video className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm text-blue-700">Lien visio disponible</span>
+                  <Button size="sm" variant="outline" onClick={() => window.open(booking.visioLink, '_blank')}>
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Ouvrir
+                  </Button>
+                </div>
+              )}
+
+              <div className="flex gap-2 flex-wrap">
+                <Select value={booking.status} onValueChange={(value) => handleUpdateStatus(booking.id, value as Booking["status"])}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="confirmed">Confirmé</SelectItem>
+                    <SelectItem value="completed">Terminé</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" onClick={() => setSelectedBooking(booking)}>
+                      <Video className="h-4 w-4 mr-1" />
+                      {booking.visioLink ? 'Modifier lien' : 'Ajouter lien'}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Lien de visioconférence</DialogTitle>
+                      <DialogDescription>
+                        Ajoutez le lien de visioconférence pour cette consultation
+                      </DialogDescription>
+                    </DialogHeader>
+                    {selectedBooking && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Lien de la visio</Label>
+                          <Input
+                            placeholder="https://meet.google.com/..."
+                            defaultValue={selectedBooking.visioLink || ""}
+                            onChange={(e) => {
+                              if (selectedBooking) {
+                                setSelectedBooking({...selectedBooking, visioLink: e.target.value});
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={() => {
+                            if (selectedBooking?.visioLink) {
+                              handleUpdateVisioLink(selectedBooking.id, selectedBooking.visioLink);
+                            }
+                            setSelectedBooking(null);
+                          }}>
+                            Sauvegarder
+                          </Button>
+                          <Button variant="outline" onClick={() => setSelectedBooking(null)}>
+                            Annuler
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Modifier
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Modifier la réservation</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Notes</Label>
+                        <Textarea
+                          placeholder="Notes sur la réservation..."
+                          defaultValue={booking.notes}
+                        />
+                      </div>
+                      <div>
+                        <Label>Prix</Label>
+                        <Input
+                          type="number"
+                          defaultValue={booking.price}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button>Sauvegarder</Button>
+                        <Button variant="outline">Annuler</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button 
+                  size="sm" 
+                  variant="destructive"
+                  onClick={() => handleDeleteBooking(booking.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Supprimer
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Bookings;
