@@ -7,6 +7,7 @@ import tarotImage from "@/assets/service-tarot.webp";
 import reikiImage from "@/assets/service-reiki.webp";
 import pendulumImage from "@/assets/service-pendulum.webp";
 import healingImage from "@/assets/service-healing.webp";
+import { apiService } from "@/lib/api";
 
 interface Service {
   id: string;
@@ -114,27 +115,52 @@ const getServiceImage = (serviceName: string) => {
   }
 };
 
-const Services = () => {
-  // Charger les services depuis localStorage ou utiliser les services par défaut
-  const [services, setServices] = useState<Service[]>(() => {
-    const savedServices = localStorage.getItem('homePageServices');
-    if (savedServices) {
-      return JSON.parse(savedServices);
-    }
-    return defaultServices;
-  });
+const getDefaultFeatures = (serviceName: string): string[] => {
+  const found = defaultServices.find(
+    (d) => d.name.toLowerCase() === serviceName.toLowerCase()
+  );
+  return found?.features || [];
+};
 
-  // Écouter les changements de localStorage
+const Services = () => {
+  const [services, setServices] = useState<Service[]>([]);
+
   useEffect(() => {
-    const handleStorageChange = () => {
-      const savedServices = localStorage.getItem('homePageServices');
-      if (savedServices) {
-        setServices(JSON.parse(savedServices));
+    const load = async () => {
+      try {
+        const apiList = await apiService.getServices();
+        const normalized: Service[] = (apiList as any[]).map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description || '',
+          shortDescription: s.description || '',
+          price: s.price,
+          duration: s.duration || '',
+          category: '',
+          isActive: s.isActive !== false,
+          image: getServiceImage(s.name),
+          features: getDefaultFeatures(s.name),
+        }));
+        setServices(normalized);
+      } catch (e) {
+        // Fallback aux valeurs par défaut
+        setServices(
+          defaultServices.map((d) => ({
+            id: d.id,
+            name: d.name,
+            description: d.shortDescription || '',
+            shortDescription: d.shortDescription || '',
+            price: d.price,
+            duration: d.duration,
+            category: '',
+            isActive: true,
+            image: d.image as string,
+            features: d.features,
+          })) as Service[]
+        );
       }
     };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    load();
   }, []);
 
   // Filtrer seulement les services actifs
