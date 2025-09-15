@@ -1,25 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Clock, User, Mail, Phone, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CalendarIcon, Clock, User, Mail, Phone, MapPin, CreditCard } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BookingCalendar from "@/components/BookingCalendar";
+import PaymentFlow from "@/components/PaymentFlow";
+import { apiService, BookingData } from "@/lib/api";
 
 const Booking = () => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedService, setSelectedService] = useState<string>("");
+  const [services, setServices] = useState<Array<{
+    id: string;
+    name: string;
+    price: number;
+    duration: string;
+    description: string;
+  }>>([]);
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -28,26 +39,30 @@ const Booking = () => {
     address: "",
     message: ""
   });
-  const [bookingType, setBookingType] = useState<"guest" | "account" | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // À connecter avec votre auth
+  
+  const [bookingType, setBookingType] = useState<"guest" | "registered" | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentBooking, setCurrentBooking] = useState<BookingData | null>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
-  const services = [
-    { id: "tarot", name: "Tirage de Cartes", price: "45€", duration: "30-60 min" },
-    { id: "reiki", name: "Reiki", price: "60€", duration: "45-90 min" },
-    { id: "pendule", name: "Pendule", price: "35€", duration: "30-45 min" },
-    { id: "guerison", name: "Guérison", price: "70€", duration: "60-90 min" }
-  ];
+  // Charger les services au montage
+  useEffect(() => {
+    loadServices();
+  }, []);
 
-  // Créneaux horaires disponibles
-  const timeSlots = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-    "17:00", "17:30", "18:00", "18:30", "19:00"
-  ];
+  const loadServices = async () => {
+    try {
+      const servicesList = await apiService.getServices();
+      setServices(servicesList);
+    } catch (error) {
+      toast.error('Erreur lors du chargement des services');
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validations
     if (!selectedDate || !selectedTime || !selectedService) {
       toast.error("Veuillez sélectionner une date, un horaire et un service");
       return;
@@ -63,19 +78,68 @@ const Booking = () => {
       return;
     }
 
-    // Ici on enverrait les données au backend selon le type
-    if (bookingType === "guest") {
-      // Créer réservation invité avec lien unique
-      const bookingId = "booking_" + Math.random().toString(36).substr(2, 9);
-      toast.success("Réservation créée ! Vous recevrez un email avec votre lien de suivi.");
-      // Rediriger vers la page de récapitulatif
-      window.open(`/booking-summary/${bookingId}`, '_blank');
-    } else {
-      // Réservation avec compte
-      toast.success("Votre réservation a été enregistrée dans votre compte !");
+    const selectedServiceData = services.find(s => s.id === selectedService);
+    if (!selectedServiceData) {
+      toast.error("Service introuvable");
+      return;
     }
+
+    try {
+      // Créer la réservation
+      const bookingData: Omit<BookingData, 'id' | 'createdAt'> = {
+        service: selectedServiceData.name,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        time: selectedTime,
+        clientInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          message: formData.message
+        },
+        type: bookingType,
+        status: 'pending',
+        paymentStatus: 'pending',
+        price: selectedServiceData.price
+      };
+
+      const result = await apiService.createBooking(bookingData);
+      setCurrentBooking(result.booking);
+      
+      // Afficher le dialog de paiement
+      setShowPaymentDialog(true);
+      
+      toast.success("Réservation créée ! Procédez au paiement pour confirmer.");
+      
+    } catch (error) {
+      toast.error("Erreur lors de la création de la réservation");
+      console.error(error);
+    }
+  };
+
+  const handlePaymentSuccess = (booking: BookingData) => {
+    setShowPaymentDialog(false);
+    toast.success("Paiement confirmé ! Redirection vers votre récapitulatif...");
     
-    // Reset du formulaire
+    // Rediriger vers le récapitulatif avec un délai pour laisser voir le toast
+    setTimeout(() => {
+      navigate(`/booking-summary/${booking.confirmationToken || booking.id}`);
+    }, 2000);
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Erreur de paiement:', error);
+    // Le dialog reste ouvert pour permettre de réessayer
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentDialog(false);
+    // La réservation reste en statut 'pending'
+    toast.info("Paiement annulé. Votre réservation est conservée en attente.");
+  };
+
+  const resetForm = () => {
     setSelectedDate(undefined);
     setSelectedTime("");
     setSelectedService("");
@@ -88,6 +152,7 @@ const Booking = () => {
       address: "",
       message: ""
     });
+    setCurrentBooking(null);
   };
 
   const selectedServiceData = services.find(s => s.id === selectedService);
@@ -113,7 +178,7 @@ const Booking = () => {
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Choisissez votre service, sélectionnez une date et un horaire qui vous conviennent, 
-              et je vous recontacterai pour confirmer votre rendez-vous.
+              et procédez au paiement sécurisé pour confirmer votre rendez-vous.
             </p>
           </div>
         </section>
@@ -148,15 +213,15 @@ const Booking = () => {
                       <ul className="text-xs text-muted-foreground space-y-1">
                         <li>• Email de confirmation avec lien de suivi</li>
                         <li>• Rappel automatique avant le RDV</li>
-                        <li>• Lien visio ajouté par l'administratrice</li>
+                        <li>• Paiement sécurisé par Stripe</li>
                       </ul>
                     </div>
                     
                     <div
-                      onClick={() => setBookingType("account")}
+                      onClick={() => setBookingType("registered")}
                       className={cn(
                         "p-6 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                        bookingType === "account" 
+                        bookingType === "registered" 
                           ? "border-primary bg-primary/5" 
                           : "border-border hover:border-primary/50"
                       )}
@@ -173,7 +238,7 @@ const Booking = () => {
                     </div>
                   </div>
                   
-                  {bookingType === "account" && (
+                  {bookingType === "registered" && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                       <p className="text-sm text-muted-foreground mb-3">
                         Vous devez avoir un compte pour cette option.
@@ -222,78 +287,33 @@ const Booking = () => {
                       >
                         <h3 className="font-semibold text-foreground">{service.name}</h3>
                         <p className="text-sm text-muted-foreground mb-2">{service.duration}</p>
-                        <p className="text-lg font-bold text-primary">{service.price}</p>
+                        <p className="text-lg font-bold text-primary">{service.price}€</p>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Sélection de la date */}
+              {/* Calendrier interactif */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-bold">2</span>
                     </div>
-                    Sélectionnez une date
+                    Sélectionnez une date et horaire
                   </CardTitle>
                   <CardDescription>
-                    Choisissez le jour de votre rendez-vous
+                    Choisissez le jour et l'heure de votre rendez-vous
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !selectedDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {selectedDate ? format(selectedDate, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            disabled={(date) => date < new Date() || date.getDay() === 0} // Pas de dimanche
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    
-                    {selectedDate && (
-                      <div className="flex-1">
-                        <p className="text-sm font-medium mb-3 flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          Horaires disponibles
-                        </p>
-                        <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                          {timeSlots.map((time) => (
-                            <Button
-                              key={time}
-                              type="button"
-                              variant={selectedTime === time ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setSelectedTime(time)}
-                              className="text-xs"
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <BookingCalendar
+                    selectedDate={selectedDate}
+                    onDateSelect={setSelectedDate}
+                    selectedTime={selectedTime}
+                    onTimeSelect={setSelectedTime}
+                  />
                 </CardContent>
               </Card>
 
@@ -395,32 +415,52 @@ const Booking = () => {
                     <CardTitle>Résumé de votre réservation</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <p><strong>Service :</strong> {selectedServiceData?.name} - {selectedServiceData?.price}</p>
+                    <div className="space-y-2 mb-4">
+                      <p><strong>Service :</strong> {selectedServiceData?.name} - {selectedServiceData?.price}€</p>
                       <p><strong>Date :</strong> {format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}</p>
                       <p><strong>Heure :</strong> {selectedTime}</p>
                       <p><strong>Durée :</strong> {selectedServiceData?.duration}</p>
                     </div>
+                    
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full bg-gradient-mystique shadow-warm"
+                      disabled={!bookingType}
+                    >
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      Procéder au paiement ({selectedServiceData?.price}€)
+                    </Button>
                   </CardContent>
                 </Card>
               )}
-
-              {/* Bouton de validation */}
-              <div className="text-center">
-                <Button 
-                  type="submit" 
-                  size="lg"
-                  className="bg-gradient-mystique hover:shadow-lg transition-all duration-300 px-8 py-3"
-                >
-                  Confirmer ma réservation
-                </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  * Je vous recontacterai rapidement pour confirmer le rendez-vous
-                </p>
-              </div>
             </form>
           </div>
         </section>
+
+        {/* Dialog de paiement */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Paiement sécurisé
+              </DialogTitle>
+              <DialogDescription>
+                Finalisez votre réservation avec un paiement sécurisé
+              </DialogDescription>
+            </DialogHeader>
+            
+            {currentBooking && (
+              <PaymentFlow
+                booking={currentBooking}
+                onPaymentSuccess={handlePaymentSuccess}
+                onPaymentError={handlePaymentError}
+                onCancel={handlePaymentCancel}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
 
       <Footer />
