@@ -58,37 +58,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Simulation d'une connexion - remplacez par votre API
-      if (email === 'admin@renaissancebysteph.fr' && password === 'admin123') {
-        const adminUser: User = {
-          id: '1',
-          email: 'admin@renaissancebysteph.fr',
-          name: 'Stéphanie',
-          role: 'admin'
-        };
-        
-        setUser(adminUser);
-        localStorage.setItem('authToken', 'mock-jwt-token');
-        localStorage.setItem('userData', JSON.stringify(adminUser));
-        return true;
+      // Appel API de connexion
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Erreur de connexion:', data.error);
+        return false;
       }
+
+      // Si connexion réussie, stocker les données utilisateur
+      const user: User = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role
+      };
       
-      // Simulation d'utilisateur normal
-      if (email && password) {
-        const normalUser: User = {
-          id: '2',
-          email: email,
-          name: 'Client',
-          role: 'user'
-        };
-        
-        setUser(normalUser);
-        localStorage.setItem('authToken', 'mock-jwt-token-user');
-        localStorage.setItem('userData', JSON.stringify(normalUser));
-        return true;
-      }
+      setUser(user);
+      localStorage.setItem('authToken', 'jwt-token'); // TODO: utiliser le vrai token JWT
+      localStorage.setItem('userData', JSON.stringify(user));
+      return true;
       
-      return false;
     } catch (error) {
       console.error('Erreur de connexion:', error);
       return false;

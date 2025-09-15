@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
+  phone TEXT,
   role TEXT CHECK(role IN ('admin', 'client')) DEFAULT 'client',
   is_active BOOLEAN DEFAULT true,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -76,4 +77,4 @@ INSERT OR IGNORE INTO services (id, name, description, price, duration) VALUES
 
 -- Admin par défaut (mot de passe: admin123)
 INSERT OR IGNORE INTO users (id, email, password_hash, first_name, last_name, role) VALUES
-('admin-1', 'admin@renaissance-voyance.com', '$2b$10$rBHMjP8P8BpP8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8', 'Admin', 'Renaissance', 'admin');
+('admin-1', 'admin@renaissancebysteph.fr', '$2a$10$CwTycUXWue0Thq9StjUM0uJ8R8.lR1BQrQ9/WuCJWs3f5j6s9Y5OG', 'Stéphanie', 'Admin', 'admin');
