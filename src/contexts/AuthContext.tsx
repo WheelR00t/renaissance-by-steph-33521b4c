@@ -59,7 +59,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
       // Appel API de connexion
-      const response = await fetch('/api/users/login', {
+      const apiBase = window.location.origin;
+      console.debug('[Auth] POST', `${apiBase}/api/users/login`);
+      const response = await fetch(`${apiBase}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -54,7 +54,9 @@ const Register = () => {
     // Ici vous appellerez votre API d'inscription
     try {
       // Appel API d'inscription
-      const response = await fetch('/api/users/register', {
+      const apiBase = window.location.origin;
+      console.debug('[Register] POST', `${apiBase}/api/users/register`);
+      const response = await fetch(`${apiBase}/api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +65,7 @@ const Register = () => {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone,
+          phone: formData.phone || null,
           password: formData.password
         })
       });
