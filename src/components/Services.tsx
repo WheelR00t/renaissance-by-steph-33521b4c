@@ -1,11 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Heart, Zap, Compass, Calendar } from "lucide-react";
+import { Sparkles, Calendar } from "lucide-react";
+import tarotImage from "@/assets/service-tarot.webp";
+import reikiImage from "@/assets/service-reiki.webp";
+import pendulumImage from "@/assets/service-pendulum.webp";
+import healingImage from "@/assets/service-healing.webp";
 
 const Services = () => {
   const services = [
     {
-      icon: <Sparkles className="h-8 w-8" />,
+      icon: <img src={tarotImage} alt="Tirage de cartes" className="h-8 w-8 object-cover rounded" />,
       title: "Tirage de Cartes",
       description: "Révélez votre avenir grâce aux messages des cartes de tarot et d'oracle. Une guidance claire pour éclairer votre chemin.",
       price: "45€",
@@ -13,7 +17,7 @@ const Services = () => {
       gradient: "bg-gradient-primary"
     },
     {
-      icon: <Heart className="h-8 w-8" />,
+      icon: <img src={reikiImage} alt="Séance Reiki" className="h-8 w-8 object-cover rounded" />,
       title: "Séance Reiki",
       description: "Harmonisez vos énergies et retrouvez l'équilibre intérieur grâce à cette technique de guérison japonaise ancestrale.",
       price: "60€",
@@ -21,7 +25,7 @@ const Services = () => {
       gradient: "bg-gradient-secondary"
     },
     {
-      icon: <Compass className="h-8 w-8" />,
+      icon: <img src={pendulumImage} alt="Divination au pendule" className="h-8 w-8 object-cover rounded" />,
       title: "Divination au Pendule",
       description: "Obtenez des réponses précises à vos questions grâce à la sagesse du pendule et à l'art de la radiesthésie.",
       price: "35€",
@@ -29,7 +33,7 @@ const Services = () => {
       gradient: "bg-gradient-mystique"
     },
     {
-      icon: <Zap className="h-8 w-8" />,
+      icon: <img src={healingImage} alt="Soins de guérison" className="h-8 w-8 object-cover rounded" />,
       title: "Soins de Guérison",
       description: "Libérez les blocages énergétiques et activez votre pouvoir d'auto-guérison grâce aux soins énergétiques personnalisés.",
       price: "70€",
