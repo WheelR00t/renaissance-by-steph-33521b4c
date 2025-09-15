@@ -2,6 +2,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarIcon, Clock, User, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,6 +28,8 @@ const Booking = () => {
     address: "",
     message: ""
   });
+  const [bookingType, setBookingType] = useState<"guest" | "account" | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // À connecter avec votre auth
 
   const services = [
     { id: "tarot", name: "Tirage de Cartes", price: "45€", duration: "30-60 min" },
@@ -50,18 +53,33 @@ const Booking = () => {
       return;
     }
 
+    if (!bookingType) {
+      toast.error("Veuillez choisir un type de réservation");
+      return;
+    }
+
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    // Ici on enverrait les données au backend
-    toast.success("Votre réservation a été envoyée ! Je vous recontacterai rapidement.");
+    // Ici on enverrait les données au backend selon le type
+    if (bookingType === "guest") {
+      // Créer réservation invité avec lien unique
+      const bookingId = "booking_" + Math.random().toString(36).substr(2, 9);
+      toast.success("Réservation créée ! Vous recevrez un email avec votre lien de suivi.");
+      // Rediriger vers la page de récapitulatif
+      window.open(`/booking-summary/${bookingId}`, '_blank');
+    } else {
+      // Réservation avec compte
+      toast.success("Votre réservation a été enregistrée dans votre compte !");
+    }
     
     // Reset du formulaire
     setSelectedDate(undefined);
     setSelectedTime("");
     setSelectedService("");
+    setBookingType(null);
     setFormData({
       firstName: "",
       lastName: "",
@@ -103,6 +121,77 @@ const Booking = () => {
         {/* Formulaire de réservation */}
         <section className="py-16">
           <div className="container mx-auto px-4 max-w-4xl">
+            {/* Choix du type de réservation */}
+            {!isLoggedIn && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Comment souhaitez-vous réserver ?</CardTitle>
+                  <CardDescription>
+                    Choisissez votre mode de réservation préféré
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                      onClick={() => setBookingType("guest")}
+                      className={cn(
+                        "p-6 rounded-lg border-2 cursor-pointer transition-all duration-200",
+                        bookingType === "guest" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <h3 className="font-semibold text-foreground mb-2">Réservation rapide</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Sans inscription, recevez un lien unique pour suivre votre RDV
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Email de confirmation avec lien de suivi</li>
+                        <li>• Rappel automatique avant le RDV</li>
+                        <li>• Lien visio ajouté par l'administratrice</li>
+                      </ul>
+                    </div>
+                    
+                    <div
+                      onClick={() => setBookingType("account")}
+                      className={cn(
+                        "p-6 rounded-lg border-2 cursor-pointer transition-all duration-200",
+                        bookingType === "account" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <h3 className="font-semibold text-foreground mb-2">Avec compte client</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Créez un compte pour un suivi personnalisé
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Historique de vos consultations</li>
+                        <li>• Notifications personnalisées</li>
+                        <li>• Gestion de vos préférences</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  {bookingType === "account" && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Vous devez avoir un compte pour cette option.
+                      </p>
+                      <div className="flex gap-3">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to="/login">Se connecter</Link>
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link to="/register">Créer un compte</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Sélection du service */}
