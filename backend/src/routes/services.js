@@ -5,7 +5,7 @@ const db = require('../database/db');
 // GET /api/services - Récupérer tous les services actifs
 router.get('/', async (req, res) => {
   try {
-    const services = await db.query(
+    const services = await db.all(
       'SELECT * FROM services WHERE is_active = 1 ORDER BY name'
     );
 
