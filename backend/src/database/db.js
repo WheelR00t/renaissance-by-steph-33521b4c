@@ -104,11 +104,54 @@ class Database {
         });
       };
 
+      // 4) BLOG_POSTS: créer la table si elle n'existe pas
+      const ensureBlogPosts = (done) => {
+        this.db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='blog_posts';", [], (tblErr, table) => {
+          if (tblErr) {
+            console.error('Migration check error (blog_posts table):', tblErr);
+            return done();
+          }
+          
+          if (!table) {
+            console.log('📝 Creating blog_posts table...');
+            const createBlogTable = `
+              CREATE TABLE blog_posts (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                slug TEXT UNIQUE NOT NULL,
+                content TEXT NOT NULL,
+                excerpt TEXT,
+                author_id TEXT NOT NULL,
+                status TEXT CHECK(status IN ('draft', 'published')) DEFAULT 'draft',
+                published_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (author_id) REFERENCES users (id)
+              );
+              CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug);
+              CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
+            `;
+            
+            this.db.exec(createBlogTable, (createErr) => {
+              if (createErr) {
+                console.error('❌ Error creating blog_posts table:', createErr);
+              } else {
+                console.log('✅ Blog posts table created successfully');
+              }
+              done();
+            });
+          } else {
+            console.log('✅ Blog posts table already exists');
+            done();
+          }
+        });
+      };
+
       // Chaînage
-      applyUser(() => ensureServices(() => ensureBookings(() => {
+      applyUser(() => ensureServices(() => ensureBookings(() => ensureBlogPosts(() => {
         this.seedAdmin();
         this.seedServices();
-      })));
+      }))));
     });
   }
 

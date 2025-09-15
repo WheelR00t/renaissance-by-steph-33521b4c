@@ -72,11 +72,14 @@ const Blog = () => {
   useEffect(() => {
     const loadArticles = async () => {
       try {
+        console.log('🔄 Chargement des articles du blog...');
         const posts = await apiService.getBlogPosts();
+        console.log('✅ Articles récupérés:', posts);
         setArticles(posts);
       } catch (error) {
-        console.error('Erreur chargement articles:', error);
+        console.error('❌ Erreur chargement articles:', error);
         // Fallback vers les articles par défaut
+        console.log('📋 Utilisation des articles par défaut');
         setArticles(defaultArticles);
       }
     };

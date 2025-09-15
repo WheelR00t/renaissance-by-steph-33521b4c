@@ -330,12 +330,20 @@ class ApiService {
 
   // BLOG - Récupérer tous les articles publiés
   async getBlogPosts(category?: string, limit = 10, offset = 0): Promise<any[]> {
+    console.log('🌐 Récupération des articles du blog...');
     const params = new URLSearchParams();
     if (category) params.append('category', category);
     params.append('limit', limit.toString());
     params.append('offset', offset.toString());
     
-    return await this.request<any[]>(`/blog?${params.toString()}`);
+    try {
+      const result = await this.request<any[]>(`/blog?${params.toString()}`);
+      console.log('✅ Articles blog récupérés:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur API blog:', error);
+      throw error;
+    }
   }
 
   // BLOG - Récupérer un article par slug
