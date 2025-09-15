@@ -142,6 +142,42 @@ router.post('/', async (req, res) => {
   }
 });
 
+// GET /api/bookings/user/my-bookings - Mes réservations (utilisateur connecté)
+router.get('/user/my-bookings', authenticateToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+
+    const bookings = await db.query(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      WHERE b.email = ?
+      ORDER BY b.date DESC, b.time DESC
+    `, [userEmail]);
+
+    const formattedBookings = bookings.map(booking => ({
+      id: booking.id,
+      service: {
+        name: booking.service_name || booking.service_id,
+        duration: booking.service_duration || '60 min'
+      },
+      date: booking.date,
+      time: booking.time,
+      status: booking.status,
+      paymentStatus: booking.payment_status,
+      price: booking.price,
+      visioLink: booking.visio_link,
+      createdAt: booking.created_at,
+      confirmationToken: booking.confirmation_token
+    }));
+
+    res.json(formattedBookings);
+  } catch (error) {
+    console.error('Erreur récupération réservations utilisateur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET /api/bookings - Liste des réservations (ADMIN SEULEMENT)
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
