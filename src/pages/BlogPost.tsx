@@ -116,7 +116,19 @@ const BlogPost = () => {
               </Button>
             </nav>
             
-            {/* Titre et métadonnées toujours visibles dans le contenu */}
+            <div className="text-center text-foreground mb-8">
+              <h1 className="text-3xl md:text-5xl font-bold mb-4">{article.title}</h1>
+              <div className="flex items-center justify-center gap-6 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{article.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -124,19 +136,6 @@ const BlogPost = () => {
           <div className="container mx-auto max-w-4xl">
             <Card className="shadow-xl">
               <CardContent className="p-8 md:p-12">
-                <header className="mb-8 text-center">
-                  <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">{article.title}</h1>
-                  <div className="flex items-center justify-center gap-6 text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{article.author}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(article.publishedAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  </div>
-                </header>
                 <div className="prose prose-lg max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
                 </div>
