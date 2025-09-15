@@ -35,9 +35,9 @@ const Header = () => {
             <a href="#blog" className="text-foreground hover:text-primary transition-colors">
               Blog
             </a>
-            <a href="#contact" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/contact" className="text-foreground hover:text-primary transition-colors">
               Contact
-            </a>
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
@@ -94,13 +94,13 @@ const Header = () => {
             >
               Blog
             </a>
-            <a
-              href="#contact"
+            <Link
+              to="/contact"
               className="block py-2 text-foreground hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Contact
-            </a>
+            </Link>
             <div className="pt-4 space-y-2">
               <Button variant="ghost" className="w-full">
                 <User className="h-4 w-4 mr-2" />
