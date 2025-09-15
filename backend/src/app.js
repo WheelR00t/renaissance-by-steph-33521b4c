@@ -30,6 +30,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/services', require('./routes/services'));
 app.use('/api/calendar', require('./routes/calendar'));
 app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/emails', require('./routes/emails'));
 
 // Route de test API
 app.get('/api', (req, res) => {
@@ -41,7 +44,12 @@ app.get('/api', (req, res) => {
       'GET /api/services',
       'GET /api/calendar/slots?date=YYYY-MM-DD',
       'POST /api/bookings',
-      'GET /api/bookings/:token'
+      'GET /api/bookings/:token',
+      'POST /api/users/register',
+      'POST /api/users/login',
+      'POST /api/payments/create-intent',
+      'POST /api/payments/confirm',
+      'POST /api/emails/confirmation'
     ]
   });
 });

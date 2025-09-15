@@ -87,18 +87,16 @@ const Booking = () => {
     try {
       // Créer la réservation
       const bookingData: Omit<BookingData, 'id' | 'createdAt'> = {
-        service: selectedServiceData.name,
+        service: selectedServiceData.id, // utiliser l'ID du service
         date: format(selectedDate, 'yyyy-MM-dd'),
         time: selectedTime,
-        clientInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          message: formData.message
-        },
-        type: bookingType,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        message: formData.message,
+        bookingType: bookingType,
         status: 'pending',
         paymentStatus: 'pending',
         price: selectedServiceData.price

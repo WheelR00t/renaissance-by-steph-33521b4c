@@ -1,0 +1,102 @@
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+const db = require('../database/db');
+
+// POST /api/users/register - Inscription
+router.post('/register', async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password
+    } = req.body;
+
+    // Validation des données
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ error: 'Données manquantes' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
+
+    // Vérifier si l'email existe déjà
+    const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+    }
+
+    // Hash du mot de passe
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const userId = uuidv4();
+
+    // Créer l'utilisateur
+    await db.run(`
+      INSERT INTO users (
+        id, email, password_hash, first_name, last_name, phone, role, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, 'client', 1)
+    `, [userId, email, hashedPassword, firstName, lastName, phone || null]);
+
+    // Récupérer l'utilisateur créé (sans le mot de passe)
+    const newUser = await db.get(`
+      SELECT id, email, first_name, last_name, phone, role, created_at
+      FROM users WHERE id = ?
+    `, [userId]);
+
+    res.status(201).json({
+      message: 'Compte créé avec succès',
+      user: newUser
+    });
+
+  } catch (error) {
+    console.error('Erreur création utilisateur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST /api/users/login - Connexion
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email et mot de passe requis' });
+    }
+
+    // Récupérer l'utilisateur
+    const user = await db.get('SELECT * FROM users WHERE email = ? AND is_active = 1', [email]);
+    if (!user) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Vérifier le mot de passe
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Retourner les infos utilisateur (sans le mot de passe)
+    const userInfo = {
+      id: user.id,
+      email: user.email,
+      name: `${user.first_name} ${user.last_name}`,
+      role: user.role
+    };
+
+    res.json({
+      message: 'Connexion réussie',
+      user: userInfo
+    });
+
+  } catch (error) {
+    console.error('Erreur connexion:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+module.exports = router;

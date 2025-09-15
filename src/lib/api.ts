@@ -14,15 +14,13 @@ export interface BookingData {
   service: string;
   date: string;
   time: string;
-  clientInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address?: string;
-    message?: string;
-  };
-  type: 'guest' | 'registered';
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address?: string;
+  message?: string;
+  bookingType?: 'guest' | 'registered';
   status: 'pending' | 'confirmed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed';
   price: number;
@@ -94,9 +92,23 @@ class ApiService {
     confirmationToken: string;
   }> {
     try {
+      // Adapter les données pour l'API backend
+      const backendData = {
+        serviceId: bookingData.service, // service contient l'ID du service
+        date: bookingData.date,
+        time: bookingData.time,
+        firstName: bookingData.firstName,
+        lastName: bookingData.lastName,
+        email: bookingData.email,
+        phone: bookingData.phone,
+        address: bookingData.address,
+        message: bookingData.message,
+        bookingType: bookingData.bookingType || 'guest'
+      };
+
       return await this.request<{booking: BookingData; confirmationToken: string}>('/bookings', {
         method: 'POST',
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify(backendData),
       });
     } catch (error) {
       console.warn('API non disponible, simulation de création');
@@ -168,13 +180,11 @@ class ApiService {
         service: 'Tirage de Cartes',
         date: new Date().toISOString().split('T')[0],
         time: '14:00',
-        clientInfo: {
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          phone: '0123456789'
-        },
-        type: 'guest',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        phone: '0123456789',
+        bookingType: 'guest',
         status: 'confirmed',
         paymentStatus: 'paid',
         price: 45,

@@ -52,14 +52,32 @@ const Register = () => {
     
     // Ici vous appellerez votre API d'inscription
     try {
-      // Simulation d'un appel API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Appel API d'inscription
+      const response = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la création du compte');
+      }
       
       toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
       // Redirection vers la page de connexion
       window.location.href = "/login";
-    } catch (error) {
-      toast.error("Erreur lors de la création du compte");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la création du compte");
     } finally {
       setLoading(false);
     }

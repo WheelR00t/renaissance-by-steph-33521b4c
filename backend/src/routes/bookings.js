@@ -67,8 +67,24 @@ router.post('/', async (req, res) => {
     `, [bookingId]);
 
     res.status(201).json({
-      ...newBooking,
-      confirmationToken
+      booking: {
+        id: newBooking.id,
+        service: newBooking.service_name,
+        date: newBooking.date,
+        time: newBooking.time,
+        firstName: newBooking.first_name,
+        lastName: newBooking.last_name,
+        email: newBooking.email,
+        phone: newBooking.phone,
+        address: newBooking.address,
+        message: newBooking.message,
+        bookingType: newBooking.booking_type,
+        status: newBooking.status,
+        paymentStatus: newBooking.payment_status,
+        price: newBooking.price,
+        createdAt: newBooking.created_at
+      },
+      confirmationToken: newBooking.confirmation_token
     });
 
   } catch (error) {
@@ -93,7 +109,24 @@ router.get('/:token', async (req, res) => {
       return res.status(404).json({ error: 'Réservation non trouvée' });
     }
 
-    res.json(booking);
+    res.json({
+      id: booking.id,
+      service: booking.service_name,
+      date: booking.date,
+      time: booking.time,
+      firstName: booking.first_name,
+      lastName: booking.last_name,
+      email: booking.email,
+      phone: booking.phone,
+      address: booking.address,
+      message: booking.message,
+      bookingType: booking.booking_type,
+      status: booking.status,
+      paymentStatus: booking.payment_status,
+      price: booking.price,
+      createdAt: booking.created_at,
+      confirmationToken: booking.confirmation_token
+    });
   } catch (error) {
     console.error('Erreur récupération réservation:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -145,7 +178,24 @@ router.put('/:token', async (req, res) => {
       WHERE b.confirmation_token = ?
     `, [token]);
 
-    res.json(updatedBooking);
+    res.json({
+      id: updatedBooking.id,
+      service: updatedBooking.service_name,
+      date: updatedBooking.date,
+      time: updatedBooking.time,
+      firstName: updatedBooking.first_name,
+      lastName: updatedBooking.last_name,
+      email: updatedBooking.email,
+      phone: updatedBooking.phone,
+      address: updatedBooking.address,
+      message: updatedBooking.message,
+      bookingType: updatedBooking.booking_type,
+      status: updatedBooking.status,
+      paymentStatus: updatedBooking.payment_status,
+      price: updatedBooking.price,
+      createdAt: updatedBooking.created_at,
+      confirmationToken: updatedBooking.confirmation_token
+    });
   } catch (error) {
     console.error('Erreur mise à jour réservation:', error);
     res.status(500).json({ error: 'Erreur serveur' });
