@@ -156,29 +156,34 @@ const Services = () => {
     setIsCreating(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.description || !formData.price) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    const newService: Service = {
-      ...formData,
-      id: editingService?.id || Date.now().toString(),
-      features: formData.features?.filter(f => f.trim() !== "") || []
-    } as Service;
+    try {
+      const serviceData = {
+        ...formData,
+        features: formData.features?.filter(f => f.trim() !== "") || []
+      };
 
-    if (editingService) {
-      setServices(services.map(s => s.id === editingService.id ? newService : s));
-      toast.success("Service mis à jour avec succès");
-    } else {
-      setServices([...services, newService]);
-      toast.success("Service créé avec succès");
+      if (editingService) {
+        const updated = await apiService.updateService(editingService.id, serviceData);
+        setServices(services.map(s => s.id === editingService.id ? { ...updated, features: serviceData.features } : s));
+        toast.success("Service mis à jour avec succès");
+      } else {
+        const created = await apiService.createService(serviceData);
+        setServices([...services, { ...created, features: serviceData.features }]);
+        toast.success("Service créé avec succès");
+      }
+
+      setEditingService(null);
+      setIsCreating(false);
+      setFormData({});
+    } catch (error) {
+      toast.error("Erreur lors de la sauvegarde");
     }
-
-    setEditingService(null);
-    setIsCreating(false);
-    setFormData({});
   };
 
   const handleCancel = () => {
@@ -187,17 +192,27 @@ const Services = () => {
     setFormData({});
   };
 
-  const handleDelete = (service: Service) => {
+  const handleDelete = async (service: Service) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le service "${service.name}" ?`)) {
-      setServices(services.filter(s => s.id !== service.id));
-      toast.success("Service supprimé avec succès");
+      try {
+        await apiService.deleteService(service.id);
+        setServices(services.filter(s => s.id !== service.id));
+        toast.success("Service supprimé avec succès");
+      } catch (error) {
+        toast.error("Impossible de supprimer ce service");
+      }
     }
   };
 
-  const toggleActive = (service: Service) => {
-    const updated = { ...service, isActive: !service.isActive };
-    setServices(services.map(s => s.id === service.id ? updated : s));
-    toast.success(`Service ${updated.isActive ? 'activé' : 'désactivé'}`);
+  const toggleActive = async (service: Service) => {
+    try {
+      const updated = { ...service, isActive: !service.isActive };
+      await apiService.updateService(service.id, updated);
+      setServices(services.map(s => s.id === service.id ? updated : s));
+      toast.success(`Service ${updated.isActive ? 'activé' : 'désactivé'}`);
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour");
+    }
   };
 
   const addFeature = () => {

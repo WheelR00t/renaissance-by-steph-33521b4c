@@ -265,6 +265,29 @@ class ApiService {
     }
   }
 
+  // SERVICES - Créer un service
+  async createService(serviceData: any): Promise<any> {
+    return await this.request<any>('/services', {
+      method: 'POST',
+      body: JSON.stringify(serviceData)
+    });
+  }
+
+  // SERVICES - Modifier un service
+  async updateService(id: string, serviceData: any): Promise<any> {
+    return await this.request<any>(`/services/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(serviceData)
+    });
+  }
+
+  // SERVICES - Supprimer un service
+  async deleteService(id: string): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>(`/services/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
   // ADMIN - Clients (liste)
   async getClients(): Promise<any[]> {
     try {
