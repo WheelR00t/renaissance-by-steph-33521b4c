@@ -24,18 +24,7 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Charger les articles depuis localStorage
-  useEffect(() => {
-    const savedArticles = localStorage.getItem('blogArticles');
-    if (savedArticles) {
-      const allArticles = JSON.parse(savedArticles);
-      // Filtrer uniquement les articles publiés
-      const publishedArticles = allArticles.filter((article: Article) => article.status === 'published');
-      setArticles(publishedArticles);
-    }
-  }, []);
-
-  // Articles par défaut si aucun n'existe
+  // Articles par défaut (serviront aussi à initialiser le stockage)
   const defaultArticles: Article[] = [
     {
       id: "1",
@@ -72,8 +61,23 @@ const Blog = () => {
     }
   ];
 
-  // Utiliser les articles par défaut s'il n'y en a pas dans localStorage
-  const displayedArticles = articles.length > 0 ? articles : defaultArticles;
+  // Charger et synchroniser avec localStorage (clé partagée: 'blogArticles')
+  useEffect(() => {
+    const saved = localStorage.getItem('blogArticles');
+    if (saved) {
+      try {
+        const allArticles = JSON.parse(saved) as Article[];
+        setArticles(allArticles.filter(a => a.status === 'published'));
+      } catch {
+        setArticles(defaultArticles);
+      }
+    } else {
+      localStorage.setItem('blogArticles', JSON.stringify(defaultArticles));
+      setArticles(defaultArticles);
+    }
+  }, []);
+
+  const displayedArticles = articles;
 
   // Filtrer les articles selon la recherche et la catégorie
   const filteredArticles = displayedArticles.filter(article => {
