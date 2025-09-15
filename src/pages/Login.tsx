@@ -33,9 +33,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLoading(true);
     
     try {
-      const { success, user } = await login(email, password);
+      const { success, user, error } = await login(email, password);
       if (!success) {
-        toast.error("Email ou mot de passe incorrect");
+        toast.error(error || "Email ou mot de passe incorrect");
         return;
       }
 

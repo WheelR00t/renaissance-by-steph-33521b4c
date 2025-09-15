@@ -67,11 +67,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: any = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = { error: raw || 'Réponse invalide du serveur' }; }
 
       if (!response.ok) {
         console.error('Erreur de connexion:', data.error);
-        return { success: false, error: data.error || 'Erreur de connexion' };
+        return { success: false, error: data.error || `Erreur ${response.status}` };
       }
 
       // Si connexion réussie, stocker les données utilisateur
