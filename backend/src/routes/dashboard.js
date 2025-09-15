@@ -26,9 +26,9 @@ router.get('/stats', async (req, res) => {
       [weekStart]
     );
 
-    // Revenus du mois (réservations confirmées ou payées)
+    // Revenus du mois (paiements reçus ce mois-ci, basé sur la dernière mise à jour)
     const monthRevenue = await db.get(
-      'SELECT SUM(price) as total FROM bookings WHERE date >= ? AND (payment_status = "paid" OR (status = "confirmed" AND payment_status != "failed"))',
+      'SELECT SUM(price) as total FROM bookings WHERE updated_at >= ? AND payment_status = "paid"',
       [monthStart]
     );
 
