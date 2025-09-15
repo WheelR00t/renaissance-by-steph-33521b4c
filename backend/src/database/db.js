@@ -31,9 +31,41 @@ class Database {
       const schema = fs.readFileSync(schemaPath, 'utf8');
       this.db.exec(schema, (err) => {
         if (err) console.error('❌ Schema error:', err);
-        else console.log('✅ Schema SQLite OK');
+        else {
+          console.log('✅ Schema SQLite OK');
+          this.runMigrations();
+        }
       });
+    } else {
+      this.runMigrations();
     }
+  }
+
+  // Migrations légères pour mettre à niveau les bases existantes
+  runMigrations() {
+    // Assurer les colonnes requises sur la table users
+    this.db.all('PRAGMA table_info(users);', [], (err, rows) => {
+      if (err) {
+        console.error('Migration check error (users):', err);
+        return;
+      }
+      const columns = (rows || []).map((r) => r.name);
+      const statements = [];
+
+      if (!columns.includes('phone')) {
+        statements.push('ALTER TABLE users ADD COLUMN phone TEXT;');
+      }
+      if (!columns.includes('is_active')) {
+        statements.push('ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1;');
+      }
+
+      if (statements.length) {
+        this.db.exec(statements.join('\n'), (applyErr) => {
+          if (applyErr) console.error('Migration apply error (users):', applyErr);
+          else console.log('✅ Migrations applied for users:', statements);
+        });
+      }
+    });
   }
 
   query(sql, params = []) {
