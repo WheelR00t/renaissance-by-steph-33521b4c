@@ -16,6 +16,7 @@ interface Article {
   slug: string;
   content: string;
   excerpt: string;
+  imageUrl?: string;
   status: "published" | "draft";
   author: string;
   publishedAt: string;
@@ -146,9 +147,22 @@ const Blog = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredArticles.map((article) => (
                 <Card key={article.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 bg-white">
+                  {/* Image d'en-tête */}
+                  {article.imageUrl && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={article.imageUrl} 
+                        alt={article.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  
                   <CardHeader>
                     <CardTitle className="text-xl hover:text-primary transition-colors cursor-pointer line-clamp-2">
-                      {article.title}
+                      <Link to={`/blog/${article.slug}`}>
+                        {article.title}
+                      </Link>
                     </CardTitle>
                     <CardDescription className="line-clamp-3">
                       {article.excerpt}

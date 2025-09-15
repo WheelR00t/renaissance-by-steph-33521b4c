@@ -32,6 +32,7 @@ router.get('/', async (req, res) => {
       slug: post.slug,
       content: post.content,
       excerpt: post.excerpt,
+      imageUrl: post.image_url,
       author: `${post.first_name} ${post.last_name}`,
       status: post.status,
       publishedAt: post.published_at,
@@ -74,6 +75,7 @@ router.get('/admin', async (req, res) => {
       slug: post.slug,
       content: post.content,
       excerpt: post.excerpt,
+      imageUrl: post.image_url,
       author: `${post.first_name} ${post.last_name}`,
       authorId: post.author_id,
       status: post.status,
@@ -111,6 +113,7 @@ router.get('/:slug', async (req, res) => {
       slug: post.slug,
       content: post.content,
       excerpt: post.excerpt,
+      imageUrl: post.image_url,
       author: `${post.first_name} ${post.last_name}`,
       status: post.status,
       publishedAt: post.published_at,
@@ -128,7 +131,7 @@ router.get('/:slug', async (req, res) => {
 // POST /api/blog - Créer un nouvel article
 router.post('/', async (req, res) => {
   try {
-    const { title, content, excerpt, status = 'draft' } = req.body;
+    const { title, content, excerpt, imageUrl, status = 'draft' } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'Titre et contenu obligatoires' });
@@ -158,9 +161,9 @@ router.post('/', async (req, res) => {
       : null;
 
     await db.run(`
-      INSERT INTO blog_posts (id, title, slug, content, excerpt, author_id, status, published_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [postId, title, slug, content, excerpt || '', adminId, status, publishedAt]);
+      INSERT INTO blog_posts (id, title, slug, content, excerpt, image_url, author_id, status, published_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [postId, title, slug, content, excerpt || '', imageUrl || null, adminId, status, publishedAt]);
 
     const newPost = await db.get(`
       SELECT bp.*, u.first_name, u.last_name 
@@ -175,6 +178,7 @@ router.post('/', async (req, res) => {
       slug: newPost.slug,
       content: newPost.content,
       excerpt: newPost.excerpt,
+      imageUrl: newPost.image_url,
       author: `${newPost.first_name} ${newPost.last_name}`,
       status: newPost.status,
       publishedAt: newPost.published_at,
@@ -191,7 +195,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, excerpt, status } = req.body;
+    const { title, content, excerpt, imageUrl, status } = req.body;
 
     const updates = [];
     const params = [];
@@ -222,6 +226,7 @@ router.put('/:id', async (req, res) => {
     
     if (typeof content !== 'undefined') { updates.push('content = ?'); params.push(content); }
     if (typeof excerpt !== 'undefined') { updates.push('excerpt = ?'); params.push(excerpt); }
+    if (typeof imageUrl !== 'undefined') { updates.push('image_url = ?'); params.push(imageUrl || null); }
     
     if (status) { 
       updates.push('status = ?'); 
@@ -263,6 +268,7 @@ router.put('/:id', async (req, res) => {
       slug: updatedPost.slug,
       content: updatedPost.content,
       excerpt: updatedPost.excerpt,
+      imageUrl: updatedPost.image_url,
       author: `${updatedPost.first_name} ${updatedPost.last_name}`,
       status: updatedPost.status,
       publishedAt: updatedPost.published_at,

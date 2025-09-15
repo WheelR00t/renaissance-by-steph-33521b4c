@@ -16,6 +16,7 @@ interface Article {
   slug: string;
   content: string;
   excerpt: string;
+  imageUrl?: string;
   author: string;
   publishedAt: string;
 }
@@ -92,6 +93,18 @@ const BlogPost = () => {
       <Header />
       
       <article className="min-h-screen bg-gradient-to-br from-mystique-start to-mystique-end">
+        {/* Image d'en-tête */}
+        {article.imageUrl && (
+          <section className="relative h-96 overflow-hidden">
+            <img 
+              src={article.imageUrl} 
+              alt={article.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40"></div>
+          </section>
+        )}
+        
         <section className="relative py-20 px-4">
           <div className="container mx-auto max-w-4xl">
             <nav className="mb-8">

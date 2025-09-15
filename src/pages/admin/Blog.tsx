@@ -20,6 +20,7 @@ interface Article {
   slug: string;
   content: string;
   excerpt: string;
+  imageUrl?: string;
   status: "published" | "draft";
   author: string;
   authorId: string;
@@ -56,6 +57,7 @@ const Blog = () => {
     title: "",
     content: "",
     excerpt: "",
+    imageUrl: "",
     status: "draft" as Article["status"]
   });
 
@@ -75,11 +77,12 @@ const Blog = () => {
         title: articleForm.title,
         content: articleForm.content,
         excerpt: articleForm.excerpt,
+        imageUrl: articleForm.imageUrl,
         status: articleForm.status
       });
 
       setArticles(prev => [newArticle, ...prev]);
-      setArticleForm({ title: "", content: "", excerpt: "", status: "draft" });
+      setArticleForm({ title: "", content: "", excerpt: "", imageUrl: "", status: "draft" });
       setIsAddingArticle(false);
       toast.success("Article créé avec succès");
     } catch (error) {
@@ -174,6 +177,28 @@ const Blog = () => {
                   placeholder="Résumé de l'article..."
                   rows={2}
                 />
+              </div>
+              <div>
+                <Label htmlFor="imageUrl">Image d'en-tête (URL)</Label>
+                <Input
+                  id="imageUrl"
+                  type="url"
+                  value={articleForm.imageUrl}
+                  onChange={(e) => setArticleForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                  placeholder="https://exemple.com/image.jpg"
+                />
+                {articleForm.imageUrl && (
+                  <div className="mt-2">
+                    <img 
+                      src={articleForm.imageUrl} 
+                      alt="Prévisualisation" 
+                      className="w-full h-32 object-cover rounded-md border"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <Label>Statut</Label>

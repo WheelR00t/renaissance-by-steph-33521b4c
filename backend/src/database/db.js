@@ -121,6 +121,7 @@ class Database {
                 slug TEXT UNIQUE NOT NULL,
                 content TEXT NOT NULL,
                 excerpt TEXT,
+                image_url TEXT,
                 author_id TEXT NOT NULL,
                 status TEXT CHECK(status IN ('draft', 'published')) DEFAULT 'draft',
                 published_at DATETIME,
@@ -141,8 +142,29 @@ class Database {
               done();
             });
           } else {
-            console.log('✅ Blog posts table already exists');
-            done();
+            // Vérifier si la colonne image_url existe
+            this.db.all('PRAGMA table_info(blog_posts);', [], (pragmaErr, columns) => {
+              if (pragmaErr) {
+                console.error('Migration check error (blog_posts columns):', pragmaErr);
+                return done();
+              }
+              
+              const hasImageUrl = columns.some(col => col.name === 'image_url');
+              if (!hasImageUrl) {
+                console.log('📝 Adding image_url column to blog_posts...');
+                this.db.exec('ALTER TABLE blog_posts ADD COLUMN image_url TEXT;', (alterErr) => {
+                  if (alterErr) {
+                    console.error('❌ Error adding image_url column:', alterErr);
+                  } else {
+                    console.log('✅ image_url column added to blog_posts');
+                  }
+                  done();
+                });
+              } else {
+                console.log('✅ Blog posts table already exists with image_url');
+                done();
+              }
+            });
           }
         });
       };

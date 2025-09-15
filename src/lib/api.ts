@@ -366,6 +366,7 @@ class ApiService {
     title: string;
     content: string;
     excerpt?: string;
+    imageUrl?: string;
     status?: 'draft' | 'published';
   }): Promise<any> {
     return await this.request<any>('/blog', {
@@ -379,6 +380,7 @@ class ApiService {
     title?: string;
     content?: string;
     excerpt?: string;
+    imageUrl?: string;
     status?: 'draft' | 'published';
   }): Promise<any> {
     return await this.request<any>(`/blog/${id}`, {
