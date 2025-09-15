@@ -7,6 +7,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { apiService } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Article {
   id: string;
@@ -125,11 +127,7 @@ const BlogPost = () => {
             <Card className="shadow-xl">
               <CardContent className="p-8 md:p-12">
                 <div className="prose prose-lg max-w-none">
-                  {article.content.split('\n\n').map((paragraph, index) => (
-                    <p key={index} className="mb-6 text-muted-foreground leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
                 </div>
               </CardContent>
             </Card>

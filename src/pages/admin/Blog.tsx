@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Eye, Calendar } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye, Calendar, Bold, Italic, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { apiService } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Article {
   id: string;
@@ -101,6 +103,17 @@ const Blog = () => {
     }
   };
 
+  const togglePublish = async (a: Article) => {
+    try {
+      const newStatus = a.status === 'published' ? 'draft' : 'published';
+      const updated = await apiService.updateBlogPost(a.id, { status: newStatus });
+      setArticles(prev => prev.map(it => it.id === a.id ? { ...it, status: updated.status, publishedAt: updated.publishedAt } : it));
+      toast.success(newStatus === 'published' ? 'Article publié' : 'Article dépublié');
+    } catch (error) {
+      console.error('Erreur mise à jour statut:', error);
+      toast.error("Impossible de changer le statut");
+    }
+  };
   const getStatusBadge = (status: Article["status"]) => {
     switch (status) {
       case "published":
@@ -108,6 +121,18 @@ const Blog = () => {
       case "draft":
         return <Badge variant="secondary">Brouillon</Badge>;
     }
+  };
+
+  // Helpers éditeur Markdown
+  const insertMd = (type: 'bold' | 'italic' | 'image' | 'link' | 'list') => {
+    const snippets: Record<string, string> = {
+      bold: "**texte en gras**",
+      italic: "*texte en italique*",
+      image: "![texte alternatif](https://url-de-votre-image.jpg)",
+      link: "[texte du lien](https://exemple.com)",
+      list: "- élément de liste\n- autre élément"
+    };
+    setArticleForm((prev) => ({ ...prev, content: `${prev.content}\n\n${snippets[type]}` }));
   };
 
   return (
@@ -164,13 +189,39 @@ const Blog = () => {
               </div>
               <div>
                 <Label htmlFor="content">Contenu *</Label>
-                <Textarea
-                  id="content"
-                  value={articleForm.content}
-                  onChange={(e) => setArticleForm(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Contenu de l'article..."
-                  rows={8}
-                />
+                {/* Toolbar Markdown */}
+                <div className="flex gap-2 mt-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('bold')} title="Gras">
+                    <strong>B</strong>
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('italic')} title="Italique">
+                    <em>I</em>
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('list')} title="Liste">
+                    ••
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('link')} title="Lien">
+                    http
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('image')} title="Image (URL)">
+                    Img
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                  <Textarea
+                    id="content"
+                    value={articleForm.content}
+                    onChange={(e) => setArticleForm(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Utilisez la syntaxe Markdown pour le gras (**bold**), italique (*italic*), images ![alt](url), listes, etc."
+                    rows={12}
+                  />
+                  <div className="border rounded-md p-3 bg-muted/30">
+                    <div className="text-sm text-muted-foreground mb-2">Aperçu</div>
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{articleForm.content || "Prévisualisation du contenu..."}</ReactMarkdown>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleAddArticle}>Créer l'article</Button>
@@ -217,7 +268,10 @@ const Blog = () => {
                   </div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => togglePublish(article)}>
+                    {article.status === 'published' ? 'Dépublier' : 'Publier'}
+                  </Button>
                   <Button size="sm" variant="outline">
                     <Edit className="h-4 w-4 mr-1" />
                     Modifier
