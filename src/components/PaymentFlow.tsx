@@ -105,6 +105,10 @@ const PaymentFlow = ({
     }).format(price);
   };
 
+  // Vérifie que le clientSecret Stripe est bien au format `${id}_secret_${secret}`
+  const isValidClientSecret = (cs?: string) =>
+    typeof cs === 'string' && cs.includes('_secret_');
+
   if (loading) {
     return (
       <Card>
@@ -191,26 +195,35 @@ const PaymentFlow = ({
             <>
               {/* Stripe Elements - Interface de paiement réelle */}
               {paymentIntent && stripePromise ? (
-                <Elements 
-                  key={paymentIntent.clientSecret}
-                  stripe={stripePromise} 
-                  options={{
-                    clientSecret: paymentIntent.clientSecret,
-                    appearance: {
-                      theme: 'stripe',
-                      variables: {
-                        colorPrimary: '#6366f1'
+                isValidClientSecret(paymentIntent.clientSecret) ? (
+                  <Elements 
+                    key={paymentIntent.clientSecret}
+                    stripe={stripePromise} 
+                    options={{
+                      clientSecret: paymentIntent.clientSecret,
+                      appearance: {
+                        theme: 'stripe',
+                        variables: {
+                          colorPrimary: '#6366f1'
+                        }
                       }
-                    }
-                  }}
-                >
-                  <StripePaymentForm
-                    booking={booking}
-                    clientSecret={paymentIntent.clientSecret}
-                    onPaymentSuccess={onPaymentSuccess}
-                    onPaymentError={onPaymentError}
-                  />
-                </Elements>
+                    }}
+                  >
+                    <StripePaymentForm
+                      booking={booking}
+                      clientSecret={paymentIntent.clientSecret}
+                      onPaymentSuccess={onPaymentSuccess}
+                      onPaymentError={onPaymentError}
+                    />
+                  </Elements>
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Configuration Stripe invalide côté serveur. Veuillez définir une clé secrète Stripe valide (STRIPE_SECRET_KEY) et redéployer.
+                    </AlertDescription>
+                  </Alert>
+                )
               ) : paymentIntent && !stripePromise ? (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
