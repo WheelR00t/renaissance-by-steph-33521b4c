@@ -5,6 +5,54 @@ const crypto = require('crypto');
 const db = require('../database/db');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
+// GET /api/bookings/:token - Récupérer une réservation par son token (public)
+router.get('/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    
+    // Récupérer la réservation avec le service associé
+    const booking = await db.get(`
+      SELECT b.*, s.name as service_name, s.duration as service_duration, s.price as service_price
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      WHERE b.id = ? OR b.confirmation_token = ?
+    `, [token, token]);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    // Formatter la réponse
+    const bookingData = {
+      id: booking.id,
+      service: {
+        name: booking.service_name || booking.service_id,
+        price: `${booking.price || booking.service_price}€`,
+        duration: booking.service_duration || booking.duration || '60 min'
+      },
+      date: booking.date,
+      time: booking.time,
+      client: {
+        firstName: booking.first_name,
+        lastName: booking.last_name,
+        email: booking.email,
+        phone: booking.phone,
+        address: booking.address,
+        message: booking.message
+      },
+      status: booking.status,
+      paymentStatus: booking.payment_status,
+      confirmationToken: booking.confirmation_token,
+      createdAt: booking.created_at
+    };
+
+    res.json(bookingData);
+  } catch (error) {
+    console.error('Erreur récupération réservation:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // POST /api/bookings - Créer une nouvelle réservation
 router.post('/', async (req, res) => {
   try {
@@ -94,117 +142,38 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/bookings/:token - Récupérer une réservation par token
-router.get('/:token', async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    const booking = await db.get(`
-      SELECT b.*, s.name as service_name, s.duration as service_duration
-      FROM bookings b
-      JOIN services s ON b.service_id = s.id
-      WHERE b.confirmation_token = ?
-    `, [token]);
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Réservation non trouvée' });
-    }
-
-    res.json({
-      id: booking.id,
-      service: booking.service_name,
-      date: booking.date,
-      time: booking.time,
-      firstName: booking.first_name,
-      lastName: booking.last_name,
-      email: booking.email,
-      phone: booking.phone,
-      address: booking.address,
-      message: booking.message,
-      bookingType: booking.booking_type,
-      status: booking.status,
-      paymentStatus: booking.payment_status,
-      price: booking.price,
-      createdAt: booking.created_at,
-      confirmationToken: booking.confirmation_token
-    });
-  } catch (error) {
-    console.error('Erreur récupération réservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// PUT /api/bookings/:token - Mettre à jour une réservation (ADMIN SEULEMENT)
-router.put('/:token', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { status, paymentStatus, visioLink } = req.body;
-
-    const updates = [];
-    const params = [];
-
-    if (status) {
-      updates.push('status = ?');
-      params.push(status);
-    }
-
-    if (paymentStatus) {
-      updates.push('payment_status = ?');
-      params.push(paymentStatus);
-    }
-
-    if (visioLink) {
-      updates.push('visio_link = ?');
-      params.push(visioLink);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'Aucune mise à jour fournie' });
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    params.push(token);
-
-    await db.run(`
-      UPDATE bookings 
-      SET ${updates.join(', ')}
-      WHERE confirmation_token = ?
-    `, params);
-
-    // Récupérer la réservation mise à jour
-    const updatedBooking = await db.get(`
-      SELECT b.*, s.name as service_name, s.duration as service_duration
-      FROM bookings b
-      JOIN services s ON b.service_id = s.id
-      WHERE b.confirmation_token = ?
-    `, [token]);
-
-    res.json({
-      id: updatedBooking.id,
-      service: updatedBooking.service_name,
-      date: updatedBooking.date,
-      time: updatedBooking.time,
-      firstName: updatedBooking.first_name,
-      lastName: updatedBooking.last_name,
-      email: updatedBooking.email,
-      phone: updatedBooking.phone,
-      address: updatedBooking.address,
-      message: updatedBooking.message,
-      bookingType: updatedBooking.booking_type,
-      status: updatedBooking.status,
-      paymentStatus: updatedBooking.payment_status,
-      price: updatedBooking.price,
-      createdAt: updatedBooking.created_at,
-      confirmationToken: updatedBooking.confirmation_token
-    });
-  } catch (error) {
-    console.error('Erreur mise à jour réservation:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
 // GET /api/bookings - Liste des réservations (ADMIN SEULEMENT)
+router.get('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.query(`
+      SELECT b.*, s.name as service_name
+      FROM bookings b
+      LEFT JOIN services s ON b.service_id = s.id
+      ORDER BY b.created_at DESC
+    `);
+
+    const list = rows.map((b) => ({
+      id: b.id,
+      clientName: `${b.first_name} ${b.last_name}`.trim(),
+      clientEmail: b.email,
+      service: b.service_name || b.service_id,
+      date: b.date,
+      time: b.time,
+      status: b.status,
+      price: b.price,
+      notes: '',
+      visioLink: b.visio_link || '',
+      bookingType: b.booking_type,
+      paymentStatus: b.payment_status,
+      createdAt: b.created_at,
+    }));
+
+    res.json(list);
+  } catch (error) {
+    console.error('Erreur liste réservations:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const rows = await db.query(`

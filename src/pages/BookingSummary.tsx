@@ -27,6 +27,7 @@ interface BookingData {
     message?: string;
   };
   status: "pending" | "confirmed" | "completed" | "cancelled";
+  paymentStatus?: string;
   videoLink?: string;
   notes?: string;
 }
@@ -37,31 +38,57 @@ const BookingSummary = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Ici vous appellerez votre API backend
-    // Pour la démo, on simule des données
-    setTimeout(() => {
-      setBooking({
-        id: bookingId || "",
-        service: {
-          name: "Tirage de Cartes",
-          price: "45€",
-          duration: "30-60 min"
-        },
-        date: "2024-03-25",
-        time: "14:30",
-        client: {
-          firstName: "Marie",
-          lastName: "Dupont",
-          email: "marie.dupont@email.com",
-          phone: "06 12 34 56 78",
-          address: "123 Rue de la Paix, 75000 Paris"
-        },
-        status: "confirmed",
-        videoLink: "https://meet.google.com/abc-defg-hij", // Sera ajouté par l'admin
-        notes: "N'oubliez pas d'être dans un endroit calme pour la consultation."
-      });
-      setLoading(false);
-    }, 1000);
+    // Récupérer les vraies données de la réservation
+    const fetchBooking = async () => {
+      if (!bookingId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const apiBase = window.location.origin;
+        const response = await fetch(`${apiBase}/api/bookings/${bookingId}`);
+        
+        if (!response.ok) {
+          throw new Error('Réservation non trouvée');
+        }
+        
+        const apiData = await response.json();
+        
+        // Transformer les données API au format attendu par le composant
+        const bookingData: BookingData = {
+          id: apiData.id,
+          service: {
+            name: apiData.service.name,
+            price: apiData.service.price,
+            duration: apiData.service.duration
+          },
+          date: apiData.date,
+          time: apiData.time,
+          client: {
+            firstName: apiData.client.firstName,
+            lastName: apiData.client.lastName,
+            email: apiData.client.email,
+            phone: apiData.client.phone,
+            address: apiData.client.address,
+            message: apiData.client.message
+          },
+          status: apiData.status,
+          paymentStatus: apiData.paymentStatus,
+          videoLink: apiData.videoLink,
+          notes: apiData.notes
+        };
+        
+        setBooking(bookingData);
+      } catch (error) {
+        console.error('Erreur lors du chargement de la réservation:', error);
+        setBooking(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
   }, [bookingId]);
 
   if (loading) {
