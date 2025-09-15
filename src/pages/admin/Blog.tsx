@@ -250,9 +250,11 @@ const Blog = () => {
                     <Edit className="h-4 w-4 mr-1" />
                     Modifier
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-4 w-4 mr-1" />
-                    Prévisualiser
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/blog/${article.id}`} target="_blank">
+                      <Eye className="h-4 w-4 mr-1" />
+                      Prévisualiser
+                    </Link>
                   </Button>
                   <Button 
                     size="sm" 
