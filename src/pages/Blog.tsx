@@ -79,9 +79,8 @@ const Blog = () => {
         setArticles(posts);
       } catch (error) {
         console.error('❌ Erreur chargement articles:', error);
-        // Fallback vers les articles par défaut
-        console.log('📋 Utilisation des articles par défaut');
-        setArticles(defaultArticles);
+        // Afficher l'erreur au lieu de fallback
+        setArticles([]);
       }
     };
     

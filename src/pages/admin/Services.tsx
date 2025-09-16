@@ -115,8 +115,9 @@ const Services = () => {
         const list = await apiService.getServices();
         setServices(list as Service[]);
       } catch (e) {
-        // fallback local
-        setServices(defaultServices);
+        console.error('❌ Erreur chargement services admin:', e);
+        // Afficher une erreur à l'utilisateur au lieu de fallback
+        setServices([]);
       }
     };
     load();

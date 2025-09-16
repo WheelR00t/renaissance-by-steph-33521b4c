@@ -142,22 +142,10 @@ const Services = () => {
           features: s.features && Array.isArray(s.features) ? s.features : getDefaultFeatures(s.name),
         }));
         setServices(normalized);
-      } catch (e) {
-        // Fallback aux valeurs par défaut
-        setServices(
-          defaultServices.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.shortDescription || '',
-            shortDescription: d.shortDescription || '',
-            price: d.price,
-            duration: d.duration,
-            category: '',
-            isActive: true,
-            image: d.image as string,
-            features: d.features,
-          })) as Service[]
-        );
+      } catch (error) {
+        console.error('❌ Erreur chargement services:', error);
+        // Afficher une erreur au lieu de fallback
+        setServices([]);
       }
     };
     load();

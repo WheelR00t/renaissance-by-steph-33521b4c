@@ -80,86 +80,41 @@ class ApiService {
 
   // CALENDRIER - Récupérer les créneaux disponibles
   async getAvailableSlots(date: string): Promise<TimeSlot[]> {
-    try {
-      return await this.request<TimeSlot[]>(`/calendar/slots?date=${date}`);
-    } catch (error) {
-      console.warn('API non disponible, utilisation des créneaux par défaut');
-      // Fallback pour le développement
-      return this.getFallbackSlots();
-    }
+    return await this.request<TimeSlot[]>(`/calendar/slots?date=${date}`);
   }
 
-  private getFallbackSlots(): TimeSlot[] {
-    const slots = [
-      "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-      "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
-      "17:00", "17:30", "18:00", "18:30", "19:00"
-    ];
-    
-    return slots.map(time => ({
-      time,
-      available: Math.random() > 0.3, // 70% de disponibilité aléatoire
-      booked: Math.random() > 0.8
-    }));
-  }
 
   // RÉSERVATIONS - Créer une réservation
   async createBooking(bookingData: Omit<BookingData, 'id' | 'createdAt'>): Promise<{
     booking: BookingData;
     confirmationToken: string;
   }> {
-    try {
-      // Adapter les données pour l'API backend
-      const backendData = {
-        serviceId: bookingData.service, // service contient l'ID du service
-        date: bookingData.date,
-        time: bookingData.time,
-        firstName: bookingData.firstName,
-        lastName: bookingData.lastName,
-        email: bookingData.email,
-        phone: bookingData.phone,
-        address: bookingData.address,
-        message: bookingData.message,
-        bookingType: bookingData.bookingType || 'guest'
-      };
+    // Adapter les données pour l'API backend
+    const backendData = {
+      serviceId: bookingData.service, // service contient l'ID du service
+      date: bookingData.date,
+      time: bookingData.time,
+      firstName: bookingData.firstName,
+      lastName: bookingData.lastName,
+      email: bookingData.email,
+      phone: bookingData.phone,
+      address: bookingData.address,
+      message: bookingData.message,
+      bookingType: bookingData.bookingType || 'guest'
+    };
 
-      return await this.request<{booking: BookingData; confirmationToken: string}>('/bookings', {
-        method: 'POST',
-        body: JSON.stringify(backendData),
-      });
-    } catch (error) {
-      console.warn('API non disponible, simulation de création');
-      // Fallback pour le développement
-      const bookingId = 'booking_' + Date.now();
-      return {
-        booking: {
-          ...bookingData,
-          id: bookingId,
-          createdAt: new Date().toISOString(),
-          confirmationToken: 'token_' + Math.random().toString(36).substr(2, 9)
-        },
-        confirmationToken: 'token_' + Math.random().toString(36).substr(2, 9)
-      };
-    }
+    return await this.request<{booking: BookingData; confirmationToken: string}>('/bookings', {
+      method: 'POST',
+      body: JSON.stringify(backendData),
+    });
   }
 
   // PAIEMENTS - Créer une intention de paiement Stripe
   async createPaymentIntent(bookingId: string, amount: number): Promise<PaymentIntent> {
-    try {
-      return await this.request<PaymentIntent>('/payments/create-intent', {
-        method: 'POST',
-        body: JSON.stringify({ bookingId, amount }),
-      });
-    } catch (error) {
-      console.warn('API non disponible, simulation de paiement');
-      // Fallback pour le développement
-      return {
-        clientSecret: 'pi_fake_client_secret_' + Math.random().toString(36).substr(2, 9),
-        amount,
-        currency: 'eur',
-        bookingId
-      };
-    }
+    return await this.request<PaymentIntent>('/payments/create-intent', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId, amount }),
+    });
   }
 
   // PAIEMENTS - Confirmer le paiement
@@ -167,47 +122,15 @@ class ApiService {
     success: boolean;
     booking: BookingData;
   }> {
-    try {
-      return await this.request<{success: boolean; booking: BookingData}>('/payments/confirm', {
-        method: 'POST',
-        body: JSON.stringify({ paymentIntentId, bookingId }),
-      });
-    } catch (error) {
-      console.warn('API non disponible, simulation de confirmation');
-      return {
-        success: true,
-        booking: {
-          id: bookingId,
-          paymentStatus: 'paid',
-          status: 'confirmed'
-        } as BookingData
-      };
-    }
+    return await this.request<{success: boolean; booking: BookingData}>('/payments/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ paymentIntentId, bookingId }),
+    });
   }
 
   // RÉSERVATIONS - Récupérer une réservation par token
   async getBookingByToken(token: string): Promise<BookingData> {
-    try {
-      return await this.request<BookingData>(`/bookings/token/${token}`);
-    } catch (error) {
-      console.warn('API non disponible, données simulées');
-      // Fallback pour le développement
-      return {
-        id: 'booking_' + Date.now(),
-        service: 'Tirage de Cartes',
-        date: new Date().toISOString().split('T')[0],
-        time: '14:00',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        phone: '0123456789',
-        bookingType: 'guest',
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        price: 45,
-        createdAt: new Date().toISOString()
-      };
-    }
+    return await this.request<BookingData>(`/bookings/token/${token}`);
   }
 
   // ADMIN - Réservations (liste)
@@ -237,39 +160,24 @@ class ApiService {
 
   // EMAILS - Déclencher l'envoi d'emails (confirmation, rappel)
   async sendConfirmationEmail(bookingId: string): Promise<{success: boolean}> {
-    try {
-      return await this.request<{success: boolean}>('/emails/confirmation', {
-        method: 'POST',
-        body: JSON.stringify({ bookingId }),
-      });
-    } catch (error) {
-      console.warn('API non disponible, email simulé');
-      return { success: true };
-    }
+    return await this.request<{success: boolean}>('/emails/confirmation', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId }),
+    });
   }
 
   async sendReminderEmail(bookingId: string): Promise<{success: boolean}> {
-    try {
-      return await this.request<{success: boolean}>('/emails/reminder', {
-        method: 'POST',
-        body: JSON.stringify({ bookingId }),
-      });
-    } catch (error) {
-      console.warn('API non disponible, email simulé');
-      return { success: true };
-    }
+    return await this.request<{success: boolean}>('/emails/reminder', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId }),
+    });
   }
 
   async sendCancellationEmail(bookingId: string): Promise<{success: boolean}> {
-    try {
-      return await this.request<{success: boolean}>('/emails/cancellation', {
-        method: 'POST',
-        body: JSON.stringify({ bookingId }),
-      });
-    } catch (error) {
-      console.warn('API non disponible, email simulé');
-      return { success: true };
-    }
+    return await this.request<{success: boolean}>('/emails/cancellation', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId }),
+    });
   }
 
   // SERVICES - Récupérer la liste des services
@@ -282,19 +190,9 @@ class ApiService {
     isActive: boolean;
   }>> {
     console.log('📋 Récupération de la liste des services...');
-    try {
-      const services = await this.request<Array<any>>('/services');
-      console.log('✅ Services récupérés:', services);
-      return services;
-    } catch (error) {
-      console.warn('⚠️ API non disponible, services par défaut');
-      return [
-        { id: "tarot", name: "Tirage de Cartes", price: 45, duration: "30-60 min", description: "", isActive: true },
-        { id: "reiki", name: "Séance Reiki", price: 60, duration: "45-90 min", description: "", isActive: true },
-        { id: "pendule", name: "Divination au Pendule", price: 35, duration: "30-45 min", description: "", isActive: true },
-        { id: "guerison", name: "Guérison Énergétique", price: 70, duration: "60-90 min", description: "", isActive: true }
-      ];
-    }
+    const services = await this.request<Array<any>>('/services');
+    console.log('✅ Services récupérés:', services);
+    return services;
   }
 
   // SERVICES - Créer un service
