@@ -29,6 +29,28 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Middleware d'authentification
 const { authenticateToken, requireAdmin } = require('./middleware/auth');
 
+// Assurer la présence de la table contact_messages (pour anciennes DB)
+const database = require('./database/db');
+database.run(`
+  CREATE TABLE IF NOT EXISTS contact_messages (
+    id TEXT PRIMARY KEY,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    subject TEXT,
+    message TEXT NOT NULL,
+    contact_reason TEXT,
+    status TEXT CHECK(status IN ('new','read','replied','archived')) DEFAULT 'new',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`).then(() => {
+  console.log('🛠️ contact_messages table ensured');
+}).catch((err) => {
+  console.error('❌ Failed ensuring contact_messages table:', err);
+});
+
 // Routes API publiques (pas de protection)
 app.use('/api/users', require('./routes/users')); // login/register publics
 app.use('/api/services', require('./routes/services')); // services publics pour affichage
