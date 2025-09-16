@@ -2,7 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Initialisation Stripe avec vérification de la clé
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeKey) {
+  console.error('❌ STRIPE_SECRET_KEY manquante. Configurez-la dans backend/.env ou vos variables d\'environnement.');
+}
+const stripe = require('stripe')(stripeKey || '');
 const nodemailer = require('nodemailer');
 
 // Configuration du transporteur email
