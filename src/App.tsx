@@ -18,9 +18,9 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Services from "./pages/admin/Services";
 import Schedule from "./pages/admin/Schedule";
+import Messages from "./pages/admin/Messages";
 import Bookings from "./pages/admin/Bookings";
 import Clients from "./pages/admin/Clients";
-import Messages from "./pages/admin/Messages";
 import Payments from "./pages/admin/Payments";
 import Blog from "./pages/admin/Blog";
 import Testimonials from "./pages/admin/Testimonials";
@@ -64,9 +64,9 @@ const App = () => (
               <Route index element={<Dashboard />} />
               <Route path="services" element={<Services />} />
               <Route path="schedule" element={<Schedule />} />
+              <Route path="messages" element={<Messages />} />
               <Route path="bookings" element={<Bookings />} />
               <Route path="clients" element={<Clients />} />
-              <Route path="messages" element={<Messages />} />
               <Route path="payments" element={<Payments />} />
               <Route path="blog" element={<Blog />} />
               <Route path="testimonials" element={<Testimonials />} />

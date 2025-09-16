@@ -69,6 +69,25 @@ CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug);
 CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
 
+-- Table contact_messages
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id TEXT PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  contact_reason TEXT,
+  status TEXT CHECK(status IN ('new', 'read', 'replied', 'archived')) DEFAULT 'new',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index pour les performances
+CREATE INDEX IF NOT EXISTS idx_contact_status ON contact_messages(status);
+CREATE INDEX IF NOT EXISTS idx_contact_created ON contact_messages(created_at);
+
 -- Services par défaut
 INSERT OR IGNORE INTO services (id, name, description, price, duration, features) VALUES
 ('tarot', 'Tirage de Cartes', 'Révélez votre avenir grâce aux messages des cartes', 45.00, '30-60 min', '["Lecture personnalisée", "Guidance sur l''avenir", "Conseils pratiques", "Support émotionnel"]'),

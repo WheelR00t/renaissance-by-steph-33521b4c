@@ -83,7 +83,6 @@ class ApiService {
     return await this.request<TimeSlot[]>(`/calendar/slots?date=${date}`);
   }
 
-
   // RÉSERVATIONS - Créer une réservation
   async createBooking(bookingData: Omit<BookingData, 'id' | 'createdAt'>): Promise<{
     booking: BookingData;
@@ -195,58 +194,7 @@ class ApiService {
     return services;
   }
 
-  // SERVICES - Créer un service
-  async createService(serviceData: any): Promise<any> {
-    return await this.request<any>('/services', {
-      method: 'POST',
-      body: JSON.stringify(serviceData)
-    });
-  }
-
-  // SERVICES - Modifier un service
-  async updateService(id: string, serviceData: any): Promise<any> {
-    console.log('🔄 Tentative de modification du service:', id, serviceData);
-    try {
-      const result = await this.request<any>(`/services/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(serviceData)
-      });
-      console.log('✅ Service modifié avec succès:', result);
-      return result;
-    } catch (error) {
-      console.error('❌ Erreur lors de la modification du service:', error);
-      throw error;
-    }
-  }
-
-  // SERVICES - Supprimer un service
-  async deleteService(id: string): Promise<{ success: boolean }> {
-    return await this.request<{ success: boolean }>(`/services/${id}`, {
-      method: 'DELETE'
-    });
-  }
-
-  // ADMIN - Clients (liste)
-  async getClients(): Promise<any[]> {
-    try {
-      const res = await this.request<{ count: number; users: any[] }>(`/users/debug-list`);
-      return res.users.map((u) => ({
-        id: u.id,
-        name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email,
-        email: u.email,
-        phone: u.phone || '',
-        dateCreated: (u.created_at || '').split('T')[0] || '',
-        totalBookings: 0,
-        lastBooking: '-',
-        status: u.is_active ? 'active' : 'inactive',
-        notes: ''
-      }));
-    } catch (error) {
-      return [];
-    }
-  }
-
-  // BLOG - Récupérer tous les articles publiés
+  // BLOG - Récupérer les articles
   async getBlogPosts(category?: string, limit = 10, offset = 0): Promise<any[]> {
     console.log('🌐 Récupération des articles du blog...');
     const params = new URLSearchParams();
@@ -254,14 +202,9 @@ class ApiService {
     params.append('limit', limit.toString());
     params.append('offset', offset.toString());
     
-    try {
-      const result = await this.request<any[]>(`/blog?${params.toString()}`);
-      console.log('✅ Articles blog récupérés:', result);
-      return result;
-    } catch (error) {
-      console.error('❌ Erreur API blog:', error);
-      throw error;
-    }
+    const result = await this.request<any[]>(`/blog?${params.toString()}`);
+    console.log('✅ Articles blog récupérés:', result);
+    return result;
   }
 
   // BLOG - Récupérer un article par slug
@@ -328,84 +271,75 @@ class ApiService {
   async getTodayAppointments(): Promise<any[]> {
     return await this.request<any[]>('/dashboard/today-appointments');
   }
+
+  // CONTACT - Envoyer un message de contact
+  async sendContactMessage(contactData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    subject?: string;
+    message: string;
+    contactReason?: string;
+  }): Promise<{ success: boolean; id: string }> {
+    return await this.request<{ success: boolean; id: string }>('/contact', {
+      method: 'POST',
+      body: JSON.stringify(contactData),
+    });
+  }
+
+  // ADMIN - Messages de contact
+  async getContactMessages(status = 'all', limit = 50, offset = 0): Promise<any[]> {
+    const params = new URLSearchParams();
+    params.append('status', status);
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+    
+    return await this.request<any[]>(`/contact?${params.toString()}`);
+  }
+
+  async getContactStats(): Promise<{ total: number; new: number; today: number }> {
+    return await this.request<{ total: number; new: number; today: number }>('/contact/stats');
+  }
+
+  async updateContactMessage(id: string, status: 'new' | 'read' | 'replied' | 'archived'): Promise<any> {
+    return await this.request<any>(`/contact/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteContactMessage(id: string): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>(`/contact/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // SERVICES ADMIN
+  async createService(serviceData: any): Promise<any> {
+    return await this.request<any>('/services', {
+      method: 'POST',
+      body: JSON.stringify(serviceData)
+    });
+  }
+
+  async updateService(id: string, serviceData: any): Promise<any> {
+    return await this.request<any>(`/services/${id}`, {
+      method: 'PUT', 
+      body: JSON.stringify(serviceData)
+    });
+  }
+
+  async deleteService(id: string): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>(`/services/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // CLIENTS ADMIN
+  async getClients(): Promise<any[]> {
+    return await this.request<any[]>('/users');
+  }
 }
 
-
 export const apiService = new ApiService();
-
-// Helpers pour votre backend
-export const API_ENDPOINTS = {
-  // Calendrier
-  GET_SLOTS: '/calendar/slots?date={date}',
-  
-  // Réservations  
-  CREATE_BOOKING: '/bookings',
-  GET_BOOKING_BY_TOKEN: '/bookings/token/{token}',
-  UPDATE_BOOKING: '/bookings/id/{id}',
-  DELETE_BOOKING: '/bookings/id/{id}',
-  LIST_BOOKINGS: '/bookings',
-  
-  // Paiements
-  CREATE_PAYMENT_INTENT: '/payments/create-intent',
-  CONFIRM_PAYMENT: '/payments/confirm',
-  LIST_PAYMENTS: '/payments/list',
-  
-  // Emails
-  SEND_CONFIRMATION: '/emails/confirmation',
-  SEND_REMINDER: '/emails/reminder',
-  
-  // Services
-  GET_SERVICES: '/services',
-};
-
-/*
-BACKEND SQLITE STRUCTURE RECOMMANDÉE :
-
--- Table services
-CREATE TABLE services (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  price REAL NOT NULL,
-  duration TEXT NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Table bookings
-CREATE TABLE bookings (
-  id TEXT PRIMARY KEY,
-  service_id TEXT NOT NULL,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  address TEXT,
-  message TEXT,
-  booking_type TEXT CHECK(booking_type IN ('guest', 'registered')) NOT NULL,
-  status TEXT CHECK(status IN ('pending', 'confirmed', 'cancelled')) DEFAULT 'pending',
-  payment_status TEXT CHECK(payment_status IN ('pending', 'paid', 'failed')) DEFAULT 'pending',
-  price REAL NOT NULL,
-  confirmation_token TEXT UNIQUE,
-  stripe_payment_intent_id TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (service_id) REFERENCES services (id)
-);
-
--- Table time_slots (optionnel, pour gérer la disponibilité)
-CREATE TABLE time_slots (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
-  is_available BOOLEAN DEFAULT true,
-  is_blocked BOOLEAN DEFAULT false,
-  UNIQUE(date, time)
-);
-
--- Index pour les performances
-CREATE INDEX idx_bookings_date ON bookings(date);
-CREATE INDEX idx_bookings_token ON bookings(confirmation_token);
-CREATE INDEX idx_time_slots_date ON time_slots(date);
-*/

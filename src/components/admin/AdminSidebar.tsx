@@ -38,6 +38,12 @@ const menuItems = [
     group: "main"
   },
   {
+    title: "Messages",
+    url: "/admin/messages",
+    icon: MessageSquare,
+    group: "business"
+  },
+  {
     title: "Réservations",
     url: "/admin/bookings",
     icon: Calendar,

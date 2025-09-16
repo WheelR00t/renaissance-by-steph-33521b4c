@@ -33,6 +33,7 @@ const { authenticateToken, requireAdmin } = require('./middleware/auth');
 app.use('/api/users', require('./routes/users')); // login/register publics
 app.use('/api/services', require('./routes/services')); // services publics pour affichage
 app.use('/api/blog', require('./routes/blog')); // blog public
+app.use('/api/contact', require('./routes/contact')); // contact public (création) + admin (gestion)
 
 // Route publique pour consulter les créneaux disponibles
 app.get('/api/calendar/slots', async (req, res) => {
@@ -96,6 +97,8 @@ app.get('/api', (req, res) => {
       'GET /api/calendar/slots?date=YYYY-MM-DD',
       'POST /api/bookings',
       'GET /api/bookings/:token',
+      'POST /api/contact',
+      'GET /api/contact (admin)',
       'POST /api/users/register',
       'POST /api/users/login',
       'POST /api/payments/create-intent',

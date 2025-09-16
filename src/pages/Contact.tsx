@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { apiService } from "@/lib/api";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +45,15 @@ const Contact = () => {
     
     try {
       // Ici vous appellerez votre API backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await apiService.sendContactMessage({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        contactReason: formData.contactReason
+      });
       
       toast.success("Votre message a été envoyé ! Je vous répondrai dans les plus brefs délais.");
       
@@ -59,7 +68,8 @@ const Contact = () => {
         contactReason: ""
       });
     } catch (error) {
-      toast.error("Erreur lors de l'envoi du message");
+      console.error('Erreur envoi message:', error);
+      toast.error("Erreur lors de l'envoi du message. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
