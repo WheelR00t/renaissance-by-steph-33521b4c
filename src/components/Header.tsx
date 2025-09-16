@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, Gem, Calendar, BookOpen, User, LogOut, Settings } from "lucide-react";
+import { Menu, X, Gem, Calendar, BookOpen, User, LogOut, Settings, Shield } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   return (
     <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -54,19 +54,29 @@ const Header = () => {
                       {user?.name || user?.email || 'Mon compte'}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to="/account">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Mon compte
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Déconnexion
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
+                   <DropdownMenuContent align="end">
+                     <DropdownMenuItem asChild>
+                       <Link to="/account">
+                         <Settings className="h-4 w-4 mr-2" />
+                         Mon compte
+                       </Link>
+                     </DropdownMenuItem>
+                     {isAdmin && (
+                       <>
+                         <DropdownMenuItem asChild>
+                           <Link to="/admin">
+                             <Shield className="h-4 w-4 mr-2" />
+                             Administration
+                           </Link>
+                         </DropdownMenuItem>
+                       </>
+                     )}
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem onClick={logout}>
+                       <LogOut className="h-4 w-4 mr-2" />
+                       Déconnexion
+                     </DropdownMenuItem>
+                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
@@ -132,35 +142,43 @@ const Header = () => {
             >
               Contact
             </Link>
-            <div className="pt-4 space-y-2">
-              {isAuthenticated ? (
-                <>
-                  <Button variant="ghost" className="w-full" asChild>
-                    <Link to="/account">
-                      <User className="h-4 w-4 mr-2" />
-                      {user?.name || user?.email || 'Mon compte'}
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={logout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Déconnexion
-                  </Button>
-                </>
-              ) : (
-                <Button variant="ghost" className="w-full" asChild>
-                  <Link to="/login">
-                    <User className="h-4 w-4 mr-2" />
-                    Connexion
-                  </Link>
-                </Button>
-              )}
-              <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
-                <Link to="/reservation">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Prendre RDV
-                </Link>
-              </Button>
-            </div>
+             <div className="pt-4 space-y-2">
+               {isAuthenticated ? (
+                 <>
+                   <Button variant="ghost" className="w-full" asChild>
+                     <Link to="/account">
+                       <User className="h-4 w-4 mr-2" />
+                       {user?.name || user?.email || 'Mon compte'}
+                     </Link>
+                   </Button>
+                   {isAdmin && (
+                     <Button variant="ghost" className="w-full" asChild>
+                       <Link to="/admin">
+                         <Shield className="h-4 w-4 mr-2" />
+                         Administration
+                       </Link>
+                     </Button>
+                   )}
+                   <Button variant="outline" className="w-full" onClick={logout}>
+                     <LogOut className="h-4 w-4 mr-2" />
+                     Déconnexion
+                   </Button>
+                 </>
+               ) : (
+                 <Button variant="ghost" className="w-full" asChild>
+                   <Link to="/login">
+                     <User className="h-4 w-4 mr-2" />
+                     Connexion
+                   </Link>
+                 </Button>
+               )}
+               <Button className="w-full bg-gradient-mystique shadow-warm" asChild>
+                 <Link to="/reservation">
+                   <Calendar className="h-4 w-4 mr-2" />
+                   Prendre RDV
+                 </Link>
+               </Button>
+             </div>
           </nav>
         )}
       </div>
