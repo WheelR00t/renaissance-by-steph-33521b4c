@@ -44,7 +44,7 @@ const Contact = () => {
     setLoading(true);
     
     try {
-      // Ici vous appellerez votre API backend
+      console.debug('[Contact] payload', formData);
       const response = await apiService.sendContactMessage({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -54,6 +54,7 @@ const Contact = () => {
         message: formData.message,
         contactReason: formData.contactReason
       });
+      console.debug('[Contact] response', response);
       
       toast.success("Votre message a été envoyé ! Je vous répondrai dans les plus brefs délais.");
       

@@ -23,7 +23,8 @@ router.post('/', async (req, res) => {
 
     console.log(`📧 Nouveau message de contact reçu de ${firstName} ${lastName} (${email})`);
 
-    res.status(201).json({
+    res.set('Cache-Control', 'no-store');
+    return res.status(201).json({
       success: true,
       message: 'Votre message a été envoyé avec succès',
       id: messageId
