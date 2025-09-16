@@ -127,15 +127,48 @@ const Blog = () => {
   };
 
   // Helpers éditeur Markdown
-  const insertMd = (type: 'bold' | 'italic' | 'image' | 'link' | 'list') => {
+  const insertMd = (type: 'bold' | 'italic' | 'image' | 'link' | 'list' | 'h2' | 'h3' | 'table' | 'quote' | 'code') => {
     const snippets: Record<string, string> = {
       bold: "**texte en gras**",
       italic: "*texte en italique*",
       image: "![texte alternatif](https://url-de-votre-image.jpg)",
       link: "[texte du lien](https://exemple.com)",
-      list: "- élément de liste\n- autre élément"
+      list: "- élément de liste\n- autre élément",
+      h2: "## Titre niveau 2",
+      h3: "### Titre niveau 3", 
+      table: "| Colonne 1 | Colonne 2 |\n|-----------|----------|\n| Valeur 1  | Valeur 2  |",
+      quote: "> Citation ou remarque importante",
+      code: "```\ncode ici\n```"
     };
-    setArticleForm((prev) => ({ ...prev, content: `${prev.content}\n\n${snippets[type]}` }));
+    
+    const textarea = document.getElementById('content') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      let insertText = snippets[type];
+      
+      // Si du texte est sélectionné, l'entourer avec le formatage
+      if (selectedText && (type === 'bold' || type === 'italic')) {
+        insertText = type === 'bold' ? `**${selectedText}**` : `*${selectedText}*`;
+      } else if (selectedText && type === 'link') {
+        insertText = `[${selectedText}](https://exemple.com)`;
+      }
+      
+      const newValue = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+      setArticleForm(prev => ({ ...prev, content: newValue }));
+      
+      // Remettre le focus et la sélection
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + insertText.length, start + insertText.length);
+      }, 10);
+    } else {
+      // Fallback si pas de textarea trouvée
+      const insertText = snippets[type];
+      setArticleForm((prev) => ({ ...prev, content: `${prev.content}\n\n${insertText}` }));
+    }
   };
 
   return (
@@ -215,21 +248,36 @@ const Blog = () => {
               <div>
                 <Label htmlFor="content">Contenu *</Label>
                 {/* Toolbar Markdown */}
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
                   <Button type="button" variant="outline" size="sm" onClick={() => insertMd('bold')} title="Gras">
                     <strong>B</strong>
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => insertMd('italic')} title="Italique">
                     <em>I</em>
                   </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('h2')} title="Titre H2">
+                    H2
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('h3')} title="Titre H3">
+                    H3
+                  </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => insertMd('list')} title="Liste">
                     ••
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('link')} title="Lien">
-                    http
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('table')} title="Tableau">
+                    ⊞
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('image')} title="Image (URL)">
-                    Img
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('link')} title="Lien">
+                    🔗
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('image')} title="Image">
+                    🖼️
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('quote')} title="Citation">
+                    "
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertMd('code')} title="Code">
+                    &lt;/&gt;
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
