@@ -45,6 +45,7 @@ interface ContactStats {
 }
 
 const Messages = () => {
+  console.log('[AdminMessages] Component mounted v2025-09-16-02:45');
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [stats, setStats] = useState<ContactStats>({ total: 0, new: 0, today: 0 });
   const [loading, setLoading] = useState(true);
