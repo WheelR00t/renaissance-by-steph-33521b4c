@@ -155,4 +155,15 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
+// DELETE /api/contact - Purger tous les messages (ADMIN SEULEMENT)
+router.delete('/', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await db.run('DELETE FROM contact_messages');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erreur purge messages contact:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

@@ -315,6 +315,12 @@ class ApiService {
     });
   }
 
+  async purgeContactMessages(): Promise<{ success: boolean }> {
+    return await this.request<{ success: boolean }>('/contact', {
+      method: 'DELETE'
+    });
+  }
+
   // SERVICES ADMIN
   async createService(serviceData: any): Promise<any> {
     return await this.request<any>('/services', {

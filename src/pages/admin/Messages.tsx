@@ -122,6 +122,19 @@ const Messages = () => {
     }
   };
 
+  const handlePurgeAll = async () => {
+    if (!confirm("Vider tous les messages ? Cette action est irréversible.")) return;
+    try {
+      await apiService.purgeContactMessages();
+      setMessages([]);
+      const newStats = await apiService.getContactStats();
+      setStats(newStats);
+      toast.success("Tous les messages ont été supprimés");
+    } catch (error) {
+      toast.error("Erreur lors du vidage des messages");
+    }
+  };
+
   const handleViewMessage = async (message: ContactMessage) => {
     setSelectedMessage(message);
     
@@ -189,6 +202,10 @@ const Messages = () => {
           <Button variant="outline" size="sm" onClick={loadMessages}>
             <RefreshCcw className="h-4 w-4 mr-2" />
             Rafraîchir
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handlePurgeAll}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Vider
           </Button>
         </div>
       </div>
