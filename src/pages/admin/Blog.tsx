@@ -153,12 +153,12 @@ const Blog = () => {
               Nouvel article
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Nouvel article</DialogTitle>
               <DialogDescription>Créez un nouvel article pour votre blog</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2">
               <div>
                 <Label htmlFor="title">Titre *</Label>
                 <Input
@@ -248,7 +248,7 @@ const Blog = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0 pt-4 border-t">
                 <Button onClick={handleAddArticle}>Créer l'article</Button>
                 <Button variant="outline" onClick={() => setIsAddingArticle(false)}>Annuler</Button>
               </div>
