@@ -32,7 +32,7 @@ git pull --ff-only origin "$CURRENT_BRANCH" || true
 # ---------- Frontend ----------
 echo "==> Installation des dépendances frontend"
 cd "$FRONTEND_DIR"
-npm install
+npm install --include=dev
 
 echo "==> Build frontend"
 npm run build

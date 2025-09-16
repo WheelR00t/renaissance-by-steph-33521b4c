@@ -43,9 +43,9 @@ fi
 echo "\n==> Installation des dépendances frontend"
 cd "$FRONTEND_DIR"
 if [ -f package-lock.json ]; then
-  npm ci --omit=dev=false
+  npm ci --include=dev
 else
-  npm install
+  npm install --include=dev
 fi
 
 echo "\n==> Build frontend"
