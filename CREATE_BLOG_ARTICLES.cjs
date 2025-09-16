@@ -20,7 +20,7 @@ const articles = [
     excerpt: 'Découvrez les 7 critères essentiels pour choisir un voyant de confiance. Guide pratique pour éviter les arnaques et trouver un vrai professionnel de la voyance.',
     content: `# Comment Choisir un Voyant Fiable ? Guide Complet 2025
 
-![Choisir un voyant fiable](/assets/blog-choisir-voyant.jpg)
+![Choisir un voyant fiable](/images/blog-choisir-voyant.jpg)
 
 Vous cherchez un **voyant fiable** pour vous guider dans votre vie ? Entre les milliers de praticiens disponibles, il peut être difficile de s'y retrouver. Ce guide vous révèle les **7 critères essentiels** pour choisir un vrai professionnel de la voyance.
 
@@ -143,7 +143,7 @@ Oui, mais évitez de multiplier les consultations sur la même question pour ne 
     excerpt: 'Le Reiki réduit le stress de 78% selon les dernières études. Découvrez comment cette technique énergétique japonaise transforme votre quotidien en seulement quelques séances.',
     content: `# Reiki et Stress : Comment Cette Méthode Révolutionne Votre Bien-être
 
-![Séance de Reiki pour réduire le stress](/assets/blog-reiki-stress.jpg)
+![Séance de Reiki pour réduire le stress](/images/blog-reiki-stress.jpg)
 
 Le **stress chronique** touche 87% des Français selon l'IFOP 2024. Face à ce fléau moderne, le **Reiki** émerge comme une solution naturelle et efficace. Cette technique énergétique japonaise révolutionne l'approche du bien-être.
 
@@ -360,7 +360,7 @@ Très rares : parfois fatigue passagère ou émotions libérées (signe de netto
     excerpt: 'Apprenez à décrypter les 12 signes les plus fréquents que l\'univers vous envoie. Guide complet des synchronicités, nombres répétitifs et messages spirituels du quotidien.',
     content: `# Les Signes de l'Univers : Comment Reconnaître et Interpréter les Messages
 
-![Les signes et synchronicités de l'univers](/assets/blog-signes-univers.jpg)
+![Les signes et synchronicités de l'univers](/images/blog-signes-univers.jpg)
 
 Vous voyez souvent **11:11** sur votre horloge ? Des plumes apparaissent sur votre chemin ? Ces **signes de l'univers** ne sont pas des coïncidences ! Découvrez comment **décrypter les messages spirituels** qui vous entourent quotidiennement.
 
@@ -621,7 +621,7 @@ async function createArticles() {
     for (const article of articles) {
       console.log(`📝 Création de l'article: ${article.title}`);
       
-      const response = await fetch(`${API_BASE}/blog/admin`, {
+      const response = await fetch(`${API_BASE}/blog`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -630,7 +630,12 @@ async function createArticles() {
         body: JSON.stringify({
           ...article,
           author_id: 'admin-1',
-          image_url: `/assets/${article.slug.split('-')[0]}-${article.slug.split('-')[1]}.jpg`
+          image_url: (article.slug.includes('voyant')
+            ? '/images/blog-choisir-voyant.jpg'
+            : article.slug.includes('reiki')
+            ? '/images/blog-reiki-stress.jpg'
+            : '/images/blog-signes-univers.jpg')
+        })
         })
       });
       
