@@ -121,3 +121,86 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Styles pour le contenu Markdown des articles */
+@layer components {
+  .prose {
+    @apply text-foreground;
+  }
+  
+  .prose h1 {
+    @apply text-4xl font-bold text-foreground mb-6 mt-8;
+  }
+  
+  .prose h2 {
+    @apply text-3xl font-bold text-foreground mb-4 mt-8 border-b border-border pb-2;
+  }
+  
+  .prose h3 {
+    @apply text-2xl font-semibold text-foreground mb-4 mt-6;
+  }
+  
+  .prose h4 {
+    @apply text-xl font-semibold text-foreground mb-3 mt-4;
+  }
+  
+  .prose p {
+    @apply text-foreground mb-4 leading-7;
+  }
+  
+  .prose ul {
+    @apply list-disc pl-6 mb-4 space-y-2;
+  }
+  
+  .prose ol {
+    @apply list-decimal pl-6 mb-4 space-y-2;
+  }
+  
+  .prose li {
+    @apply text-foreground leading-7;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted-foreground bg-muted p-4 my-6 rounded-r;
+  }
+  
+  .prose strong {
+    @apply font-bold text-foreground;
+  }
+  
+  .prose em {
+    @apply italic text-foreground;
+  }
+  
+  .prose a {
+    @apply text-primary hover:text-primary-dark underline transition-colors;
+  }
+  
+  .prose img {
+    @apply rounded-lg shadow-elegant my-6 max-w-full;
+  }
+  
+  .prose table {
+    @apply w-full border-collapse border border-border my-6;
+  }
+  
+  .prose th {
+    @apply bg-muted p-3 text-left font-semibold border border-border;
+  }
+  
+  .prose td {
+    @apply p-3 border border-border;
+  }
+  
+  .prose code {
+    @apply bg-muted text-foreground px-2 py-1 rounded text-sm font-mono;
+  }
+  
+  .prose pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto my-6;
+  }
+  
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+}

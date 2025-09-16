@@ -288,7 +288,7 @@ const Blog = () => {
                     placeholder="Utilisez la syntaxe Markdown pour le gras (**bold**), italique (*italic*), images ![alt](url), listes, etc."
                     rows={12}
                   />
-                  <div className="border rounded-md p-3 bg-muted/30">
+                  <div className="border rounded-md p-3 bg-muted/30 overflow-y-auto max-h-96">
                     <div className="text-sm text-muted-foreground mb-2">Aperçu</div>
                     <div className="prose prose-sm max-w-none">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{articleForm.content || "Prévisualisation du contenu..."}</ReactMarkdown>
