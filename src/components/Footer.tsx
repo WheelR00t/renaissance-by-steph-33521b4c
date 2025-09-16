@@ -41,10 +41,6 @@ const Footer = () => {
                 <span>contact@renaissancebysteph.fr</span>
               </li>
               <li className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <span>06 XX XX XX XX</span>
-              </li>
-              <li className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span>Consultations en ligne</span>
               </li>
@@ -55,11 +51,6 @@ const Footer = () => {
         <div className="border-t border-background/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-background/60">
             © 2024 Renaissance By Steph. Tous droits réservés.
-          </p>
-          <p className="text-background/60 flex items-center space-x-1 mt-4 md:mt-0">
-            <span>Site développé avec</span>
-            <Heart className="h-4 w-4 text-primary" />
-            <span>passion</span>
           </p>
         </div>
       </div>
