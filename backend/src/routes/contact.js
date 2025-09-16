@@ -66,6 +66,7 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       updatedAt: msg.updated_at
     }));
 
+    res.set('Cache-Control', 'no-store');
     res.json(formatted);
   } catch (error) {
     console.error('Erreur récupération messages contact:', error);

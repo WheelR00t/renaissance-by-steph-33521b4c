@@ -55,6 +55,7 @@ class ApiService {
 
     const config: RequestInit = {
       headers,
+      cache: 'no-store',
       ...options,
     };
 
@@ -294,12 +295,13 @@ class ApiService {
     params.append('status', status);
     params.append('limit', limit.toString());
     params.append('offset', offset.toString());
+    params.append('_', Date.now().toString()); // anti-cache
     
     return await this.request<any[]>(`/contact?${params.toString()}`);
   }
 
   async getContactStats(): Promise<{ total: number; new: number; today: number }> {
-    return await this.request<{ total: number; new: number; today: number }>('/contact/stats');
+    return await this.request<{ total: number; new: number; today: number }>(`/contact/stats?_=${Date.now()}`);
   }
 
   async updateContactMessage(id: string, status: 'new' | 'read' | 'replied' | 'archived'): Promise<any> {
