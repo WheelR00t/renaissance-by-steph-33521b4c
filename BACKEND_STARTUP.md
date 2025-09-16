@@ -8,6 +8,7 @@ Toutes les données factices ont été supprimées du frontend. Désormais, **TO
 - ✅ Paiements
 - ✅ Dashboard & statistiques
 - ✅ Articles de blog
+- ✅ Messages de contact (panel admin)
 - ✅ Créneaux disponibles
 - ✅ Emails automatiques
 
@@ -32,6 +33,7 @@ Cette option :
 - Crée automatiquement des données de test si la DB est vide
 - Initialise 3 réservations exemple
 - Ajoute 3 articles de blog de démo
+- Ajoute 3 messages de contact de test pour le panel admin
 
 ## 📋 Données créées automatiquement :
 
@@ -50,6 +52,11 @@ Cette option :
 - Marie Dubois - Tarot (confirmée, payée)
 - Pierre Martin - Reiki (en attente)
 - Sophie Leroy - Pendule (confirmée, payée)
+
+### Messages de contact de test :
+- Marie Dubois - Demande d'informations (nouveau)
+- Pierre Martin - Séance de Reiki (lu)
+- Sophie Leroy - Retour positif (répondu)
 
 ## 🔧 Variables d'environnement requises :
 

@@ -53,15 +53,24 @@ const Messages = () => {
   const loadMessages = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Chargement des messages de contact...');
+      
       const [messagesData, statsData] = await Promise.all([
         apiService.getContactMessages(statusFilter),
         apiService.getContactStats()
       ]);
-      setMessages(messagesData);
-      setStats(statsData);
+      
+      console.log('📧 Messages chargés:', messagesData);
+      console.log('📊 Stats chargées:', statsData);
+      
+      setMessages(messagesData || []);
+      setStats(statsData || { total: 0, new: 0, today: 0 });
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
-      toast.error("Erreur lors du chargement des messages");
+      console.error('❌ Erreur chargement messages:', error);
+      toast.error(`Erreur lors du chargement des messages: ${error.message}`);
+      // En cas d'erreur, vider les données au lieu de garder d'anciennes données
+      setMessages([]);
+      setStats({ total: 0, new: 0, today: 0 });
     } finally {
       setLoading(false);
     }

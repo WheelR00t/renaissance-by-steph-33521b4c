@@ -201,9 +201,55 @@ Le tarot est un miroir de l'âme qui révèle ce que nous savons déjà au fond 
       ]);
     }
 
+    // Ajouter quelques messages de contact de test
+    console.log('📧 Ajout de messages de contact...');
+    const contactMessages = [
+      {
+        id: uuidv4(),
+        firstName: 'Marie',
+        lastName: 'Dubois',
+        email: 'marie.dubois@email.com',
+        phone: '06 12 34 56 78',
+        subject: 'Demande d\'informations',
+        message: 'Bonjour, j\'aimerais avoir des informations sur vos consultations de tarot. Merci !',
+        contactReason: 'consultation',
+        status: 'new'
+      },
+      {
+        id: uuidv4(),
+        firstName: 'Pierre',
+        lastName: 'Martin',
+        email: 'pierre.martin@email.com',
+        subject: 'Séance de Reiki',
+        message: 'Bonsoir, je voudrais réserver une séance de Reiki. Quels sont vos créneaux disponibles ?',
+        contactReason: 'consultation',
+        status: 'read'
+      },
+      {
+        id: uuidv4(),
+        firstName: 'Sophie',
+        lastName: 'Leroy',
+        email: 'sophie.leroy@email.com',
+        phone: '07 89 12 34 56',
+        message: 'Merci pour la magnifique séance d\'hier ! J\'ai ressenti beaucoup de bien-être.',
+        contactReason: 'feedback',
+        status: 'replied'
+      }
+    ];
+
+    // Insérer les messages de contact
+    for (const msg of contactMessages) {
+      await db.run(`
+        INSERT INTO contact_messages (
+          id, first_name, last_name, email, phone, subject, message, contact_reason, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [msg.id, msg.firstName, msg.lastName, msg.email, msg.phone || null, msg.subject || null, msg.message, msg.contactReason || null, msg.status]);
+    }
+
     console.log('✅ Données de démonstration créées avec succès !');
     console.log(`   - ${demoBookings.length} réservations`);
     console.log(`   - ${demoBlogPosts.length} articles de blog`);
+    console.log(`   - ${contactMessages.length} messages de contact`);
     console.log('');
     console.log('📋 Vous pouvez maintenant :');
     console.log('   - Tester les réservations');
