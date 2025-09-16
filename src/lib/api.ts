@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+
 // API Layer - Connectez ces endpoints à votre backend SQLite
 
 const API_BASE_URL = '/api';
@@ -66,8 +68,27 @@ class ApiService {
       
       if (!response.ok) {
         const errorText = await response.text();
+        let message = `API Error: ${response.status} ${response.statusText}`;
+        try {
+          const parsed = errorText ? JSON.parse(errorText) : {};
+          if (parsed?.error) message = parsed.error;
+        } catch {}
         console.error('❌ API Error response:', errorText);
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+
+        if (response.status === 401 || response.status === 403) {
+          console.warn('🔒 Unauthorized/Forbidden. Clearing session and redirecting to login.');
+          try {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+          } catch {}
+          toast.error('Session expirée ou accès refusé. Veuillez vous reconnecter.');
+          const from = encodeURIComponent(window.location.pathname + window.location.search);
+          if (!window.location.pathname.startsWith('/login')) {
+            window.location.href = `/login?from=${from}`;
+          }
+        }
+
+        throw new Error(message);
       }
       
       const data = await response.json();
