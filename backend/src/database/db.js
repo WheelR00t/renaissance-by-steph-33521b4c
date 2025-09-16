@@ -5,7 +5,11 @@ const bcrypt = require('bcryptjs');
 
 class Database {
   constructor() {
-    const dbPath = path.join(__dirname, '../../data/voyance.db');
+    const pathFromEnv = process.env.DB_PATH || 'data/voyance.db';
+    const backendRoot = path.join(__dirname, '..', '..');
+    const dbPath = path.isAbsolute(pathFromEnv)
+      ? pathFromEnv
+      : path.join(backendRoot, pathFromEnv);
     
     // Créer le dossier data
     const dataDir = path.dirname(dbPath);

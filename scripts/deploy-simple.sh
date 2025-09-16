@@ -23,7 +23,10 @@ echo "📌 Branche: $CURRENT_BRANCH"
 echo "==> Reset dur sur origin/$CURRENT_BRANCH"
 git checkout "$CURRENT_BRANCH"
 git reset --hard "origin/$CURRENT_BRANCH"
-git clean -fd
+# Préserver les données persistantes
+if command -v git >/dev/null 2>&1; then
+  git clean -fd -e backend/data -e backend/data/** -e logs -e logs/**
+fi
 git pull --ff-only origin "$CURRENT_BRANCH" || true
 
 # ---------- Frontend ----------
