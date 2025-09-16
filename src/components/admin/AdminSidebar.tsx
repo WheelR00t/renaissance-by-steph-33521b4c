@@ -86,9 +86,9 @@ const menuItems = [
     group: "content"
   },
   {
-    title: "Messages",
-    url: "/admin/messages",
-    icon: MessageSquare,
+    title: "Galerie",
+    url: "/admin/gallery",
+    icon: Image,
     group: "content"
   },
   {

@@ -10,11 +10,13 @@ import {
   Mail, 
   MessageCircle, 
   Clock, 
+  Phone,
   Trash2, 
   Eye,
   Reply,
   Archive,
   Filter,
+  RefreshCcw,
   ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
@@ -78,6 +80,14 @@ const Messages = () => {
 
   useEffect(() => {
     loadMessages();
+  }, [statusFilter]);
+
+  // Rafraîchissement auto toutes les 10s
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadMessages();
+    }, 10000);
+    return () => clearInterval(id);
   }, [statusFilter]);
 
   const handleUpdateStatus = async (id: string, newStatus: ContactMessage["status"]) => {
@@ -175,6 +185,12 @@ const Messages = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Messages de Contact</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={loadMessages}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Rafraîchir
+          </Button>
+        </div>
       </div>
 
       {/* Statistiques */}
@@ -287,7 +303,7 @@ const Messages = () => {
                       </span>
                       {message.phone && (
                         <span className="flex items-center gap-1 mt-1">
-                          <Clock className="h-3 w-3" />
+                          <Phone className="h-3 w-3" />
                           {message.phone}
                         </span>
                       )}
@@ -319,7 +335,7 @@ const Messages = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                      <DialogContent className="max-w-2xl" onOpenAutoFocus={(e) => e.preventDefault()}>
                         {selectedMessage && (
                           <>
                             <DialogHeader>
@@ -364,7 +380,7 @@ const Messages = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => window.open(`mailto:${selectedMessage.email}`)}
+                                  onClick={() => window.open(`mailto:${selectedMessage.email}?subject=${encodeURIComponent(selectedMessage.subject || 'Réponse à votre message')}`)}
                                 >
                                   <Reply className="h-4 w-4 mr-2" />
                                   Répondre par email
