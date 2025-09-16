@@ -184,46 +184,27 @@ const Stats = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-primary rounded-full"></div>
-                <span className="font-medium">Consultation Tarot</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">45%</span>
-                <Badge>18 consultations</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-secondary rounded-full"></div>
-                <span className="font-medium">Séance de Reiki</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">30%</span>
-                <Badge>12 consultations</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-accent rounded-full"></div>
-                <span className="font-medium">Guérison Énergétique</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">15%</span>
-                <Badge>6 consultations</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-muted rounded-full"></div>
-                <span className="font-medium">Pendule Divinatoire</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">10%</span>
-                <Badge>4 consultations</Badge>
-              </div>
-            </div>
+            {stats.popularServices.length > 0 ? (
+              stats.popularServices.map((service, index) => (
+                <div key={service.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      index === 0 ? 'bg-primary' :
+                      index === 1 ? 'bg-secondary' :
+                      index === 2 ? 'bg-accent' :
+                      'bg-muted'
+                    }`}></div>
+                    <span className="font-medium">{service.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{service.percentage}%</span>
+                    <Badge>{service.bookings_count} consultation{service.bookings_count > 1 ? 's' : ''}</Badge>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">Aucune consultation pour le moment</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -237,38 +218,23 @@ const Stats = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Nouvelle réservation</p>
-                  <p className="text-xs text-muted-foreground">Marie D. - Consultation Tarot</p>
-                </div>
-                <span className="text-xs text-muted-foreground">Il y a 2h</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Nouveau témoignage</p>
-                  <p className="text-xs text-muted-foreground">Pierre M. - 5 étoiles</p>
-                </div>
-                <span className="text-xs text-muted-foreground">Il y a 4h</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <MessageSquare className="h-4 w-4 text-blue-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Nouveau message</p>
-                  <p className="text-xs text-muted-foreground">Question sur les horaires</p>
-                </div>
-                <span className="text-xs text-muted-foreground">Il y a 6h</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-green-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Nouveau client</p>
-                  <p className="text-xs text-muted-foreground">Julie L. s'est inscrite</p>
-                </div>
-                <span className="text-xs text-muted-foreground">Hier</span>
-              </div>
+              {stats.recentActivity.length > 0 ? (
+                stats.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center gap-3">
+                    {activity.type === 'booking' && <Calendar className="h-4 w-4 text-primary" />}
+                    {activity.type === 'message' && <MessageSquare className="h-4 w-4 text-blue-500" />}
+                    {activity.type === 'review' && <Star className="h-4 w-4 text-yellow-500" />}
+                    {activity.type === 'user' && <Users className="h-4 w-4 text-green-500" />}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.description}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{formatRelativeTime(activity.time)}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">Aucune activité récente</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -281,34 +247,19 @@ const Stats = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">14h00 - 16h00</span>
-                </div>
-                <Badge className="bg-green-100 text-green-800">Très demandé</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">10h00 - 12h00</span>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800">Populaire</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">16h00 - 18h00</span>
-                </div>
-                <Badge variant="secondary">Modéré</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">09h00 - 10h00</span>
-                </div>
-                <Badge variant="outline">Faible</Badge>
-              </div>
+              {stats.peakHours.length > 0 ? (
+                stats.peakHours.map((slot) => (
+                  <div key={slot.timeSlot} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{slot.timeSlot}</span>
+                    </div>
+                    {getBadgeForLevel(slot.level)}
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">Aucune donnée sur les horaires</p>
+              )}
             </div>
           </CardContent>
         </Card>
