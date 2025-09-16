@@ -132,9 +132,13 @@ router.get('/:slug', async (req, res) => {
 // POST /api/blog - Créer un nouvel article
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    console.log('📝 [BLOG] Création article - User:', req.user);
+    console.log('📝 [BLOG] Body reçu:', req.body);
+    
     const { title, content, excerpt, imageUrl, status = 'draft' } = req.body;
     
     if (!title || !content) {
+      console.log('❌ [BLOG] Titre ou contenu manquant');
       return res.status(400).json({ error: 'Titre et contenu obligatoires' });
     }
 
@@ -149,22 +153,30 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     let slug = baseSlug;
     let counter = 1;
     
+    console.log('🏷️  [BLOG] Slug de base:', baseSlug);
+    
     // Vérifier l'unicité du slug
     while (await db.get('SELECT id FROM blog_posts WHERE slug = ?', [slug])) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
+    
+    console.log('🏷️  [BLOG] Slug final:', slug);
 
     const postId = uuidv4();
-    const adminId = 'admin-1'; // ID de l'admin par défaut
+    const adminId = req.user?.id || 'admin-1'; // Utiliser l'ID de l'utilisateur connecté
     const publishedAt = status === 'published' 
       ? new Date().toISOString().replace('T', ' ').replace('Z', '').slice(0, 19)
       : null;
+
+    console.log('💾 [BLOG] Insertion en base:', { postId, title, slug, adminId, status, publishedAt });
 
     await db.run(`
       INSERT INTO blog_posts (id, title, slug, content, excerpt, image_url, author_id, status, published_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [postId, title, slug, content, excerpt || '', imageUrl || null, adminId, status, publishedAt]);
+
+    console.log('✅ [BLOG] Article inséré, récupération des données...');
 
     const newPost = await db.get(`
       SELECT bp.*, u.first_name, u.last_name 
@@ -172,6 +184,12 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       JOIN users u ON bp.author_id = u.id 
       WHERE bp.id = ?
     `, [postId]);
+
+    console.log('📄 [BLOG] Article récupéré:', newPost ? 'OK' : 'ERREUR');
+
+    if (!newPost) {
+      throw new Error('Article créé mais non récupérable');
+    }
 
     res.status(201).json({
       id: newPost.id,
@@ -187,8 +205,12 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       updatedAt: newPost.updated_at
     });
   } catch (error) {
-    console.error('Erreur création article:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ [BLOG] Erreur création article:', error);
+    console.error('❌ [BLOG] Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erreur serveur',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
