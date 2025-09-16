@@ -107,6 +107,7 @@ app.use('/api/payments', require('./routes/payments'));
 
 // Routes API admin (authentification + rôle admin requis)
 app.use('/api/dashboard', authenticateToken, requireAdmin, require('./routes/dashboard'));
+app.use('/api/stats', authenticateToken, requireAdmin, require('./routes/stats'));
 
 // Route de test API
 app.get('/api', (req, res) => {

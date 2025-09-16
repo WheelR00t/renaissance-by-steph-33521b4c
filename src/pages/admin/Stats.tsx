@@ -1,8 +1,117 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Euro, TrendingUp, Eye, Clock, MessageSquare, Star } from "lucide-react";
+import { Calendar, Users, Euro, TrendingUp, Eye, Clock, MessageSquare, Star, Loader2 } from "lucide-react";
+import { apiService } from "@/lib/api";
+import { toast } from "sonner";
+
+interface StatsData {
+  monthlyRevenue: {
+    current: number;
+    growth: number;
+  };
+  monthlyBookings: {
+    current: number;
+    growth: number;
+  };
+  newClients: number;
+  averageRating: number;
+  totalReviews: number;
+  popularServices: Array<{
+    name: string;
+    bookings_count: number;
+    percentage: number;
+  }>;
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    time: string;
+    status: string;
+  }>;
+  peakHours: Array<{
+    timeSlot: string;
+    bookingsCount: number;
+    level: 'high' | 'medium' | 'low';
+  }>;
+}
 
 const Stats = () => {
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await apiService.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error('Erreur chargement stats:', error);
+        toast.error('Erreur lors du chargement des statistiques');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  const formatRelativeTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'À l\'instant';
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return 'Hier';
+    if (diffInDays < 7) return `Il y a ${diffInDays} jours`;
+    return date.toLocaleDateString('fr-FR');
+  };
+
+  const getBadgeForLevel = (level: string) => {
+    switch (level) {
+      case 'high':
+        return <Badge className="bg-green-100 text-green-800">Très demandé</Badge>;
+      case 'medium':
+        return <Badge className="bg-blue-100 text-blue-800">Populaire</Badge>;
+      case 'low':
+        return <Badge variant="outline">Faible</Badge>;
+      default:
+        return <Badge variant="secondary">Modéré</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Statistiques</h1>
+          <p className="text-muted-foreground">Vue d'ensemble de votre activité</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Chargement des statistiques...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Statistiques</h1>
+          <p className="text-muted-foreground">Vue d'ensemble de votre activité</p>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Impossible de charger les statistiques</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
@@ -18,10 +127,10 @@ const Stats = () => {
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,450€</div>
+            <div className="text-2xl font-bold">{stats.monthlyRevenue.current}€</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
-              +15% par rapport au mois dernier
+              {stats.monthlyRevenue.growth >= 0 ? '+' : ''}{stats.monthlyRevenue.growth}% par rapport au mois dernier
             </p>
           </CardContent>
         </Card>
@@ -32,10 +141,10 @@ const Stats = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">32</div>
+            <div className="text-2xl font-bold">{stats.monthlyBookings.current}</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
-              +8% ce mois
+              {stats.monthlyBookings.growth >= 0 ? '+' : ''}{stats.monthlyBookings.growth}% ce mois
             </p>
           </CardContent>
         </Card>
@@ -46,10 +155,9 @@ const Stats = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{stats.newClients}</div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline h-3 w-3 mr-1" />
-              +22% ce mois
+              Ce mois
             </p>
           </CardContent>
         </Card>
@@ -60,9 +168,9 @@ const Stats = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.9</div>
+            <div className="text-2xl font-bold">{stats.averageRating}</div>
             <p className="text-xs text-muted-foreground">
-              Basé sur 28 avis
+              {stats.totalReviews > 0 ? `Basé sur ${stats.totalReviews} avis` : 'Aucun avis pour le moment'}
             </p>
           </CardContent>
         </Card>

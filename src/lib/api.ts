@@ -369,6 +369,11 @@ class ApiService {
   async getClients(): Promise<any[]> {
     return await this.request<any[]>('/users');
   }
+
+  // STATS ADMIN
+  async getStats(): Promise<any> {
+    return await this.request<any>('/stats');
+  }
 }
 
 export const apiService = new ApiService();
